@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>T1 機房機櫃</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Saira+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* 版面：上方工具列＋左側機房場景（兩座 42U 機櫃，可 3D 翻到背面）＋右側檢視/編輯面板。
+   色彩：介面跟隨淺/深色主題；機櫃與設備是實體物件，固定使用實物顏色。強調色取自設備上的黃色標籤貼紙。 */
+:root{
+  --bg:#e9ecea; --panel:#ffffff; --panel-2:#f3f5f4; --ink:#15191b; --muted:#5b6569; --line:#d3d9d7;
+  --accent:#f2cf1d; --accent-ink:#1a1600; --ok:#14a25a; --warn:#d9861a; --bad:#d23b3b; --info:#1d7fbf;
+  --wall-1:#e7e1d3; --wall-2:#d6cfbe; --floor-1:#d9cbb0; --floor-2:#c8b897; --floor-line:rgba(120,96,60,.28);
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 6px 24px rgba(20,30,30,.08);
+  --f-ui:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --f-disp:"Saira Condensed","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --uh:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101415; --panel:#181d1f; --panel-2:#1f2527; --ink:#e6ebe9; --muted:#97a3a1; --line:#2b3336;
+  --accent:#f2cf1d; --accent-ink:#1a1600; --ok:#2fc171; --warn:#e9a03a; --bad:#ef5b5b; --info:#4aa8e6;
+  --wall-1:#22262a; --wall-2:#1a1d20; --floor-1:#2b2822; --floor-2:#221f1a; --floor-line:rgba(255,230,180,.08);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101415; --panel:#181d1f; --panel-2:#1f2527; --ink:#e6ebe9; --muted:#97a3a1; --line:#2b3336;
+  --accent:#f2cf1d; --accent-ink:#1a1600; --ok:#2fc171; --warn:#e9a03a; --bad:#ef5b5b; --info:#4aa8e6;
+  --wall-1:#22262a; --wall-2:#1a1d20; --floor-1:#2b2822; --floor-2:#221f1a; --floor-line:rgba(255,230,180,.08);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;overflow:hidden}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{height:100%;display:grid;grid-template-rows:auto 1fr}
+
+/* ── 工具列 ── */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-mark{width:30px;height:34px;border-radius:3px;background:#16191b;position:relative;flex:none;box-shadow:inset 0 0 0 2px #2b3033}
+.brand-mark i{position:absolute;left:5px;right:5px;height:4px;background:#3a4044;border-radius:1px}
+.brand-mark i:nth-child(1){top:6px}.brand-mark i:nth-child(2){top:12px}.brand-mark i:nth-child(3){top:18px;background:#2fc171;box-shadow:0 0 6px #2fc171}.brand-mark i:nth-child(4){top:24px}
+.brand h1{margin:0;font-family:var(--f-disp);font-weight:700;font-size:22px;letter-spacing:.02em;line-height:1}
+.brand small{display:block;color:var(--muted);font-size:12px;line-height:1.3}
+.stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{display:flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);font-size:12px;white-space:nowrap}
+.stat b{font-family:var(--f-disp);font-size:16px;font-weight:700;letter-spacing:.02em}
+.meter{width:54px;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok);border-radius:3px;transition:width .5s}
+.stat .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.spacer{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel-2)}
+.seg button{border:0;background:transparent;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:600}
+.search{position:relative}
+.search input{width:190px;padding:6px 10px 6px 30px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2)}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:13px;white-space:nowrap;transition:transform .12s,background .15s,border-color .15s}
+.btn:hover{border-color:var(--muted)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent;font-weight:700}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--bad)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── 主區 ── */
+.main{display:grid;grid-template-columns:1fr 360px;min-height:0}
+.stage{position:relative;min-width:0;min-height:0;overflow:auto;background:linear-gradient(180deg,var(--wall-1),var(--wall-2) 70%,var(--floor-2) 70%,var(--floor-1));}
+.stage-tools{position:sticky;top:0;left:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;pointer-events:none}
+.stage-tools>*{pointer-events:auto}
+.chip{border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(6px);padding:4px 10px;border-radius:999px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+.zoom{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);padding:3px 10px;border-radius:999px}
+.zoom input{width:90px}
+.floor{position:absolute;left:0;right:0;bottom:0;height:30%;pointer-events:none;
+  background-image:linear-gradient(var(--floor-line) 1px,transparent 1px),linear-gradient(90deg,var(--floor-line) 1px,transparent 1px);
+  background-size:120px 60px;background-position:center top;transform-origin:top;transform:perspective(500px) rotateX(55deg) scale(1.6,1);opacity:.9}
+.scene{position:relative;perspective:2600px;perspective-origin:50% 40%;display:flex;justify-content:center;padding:6px 16px 40px;min-width:max-content}
+.room{position:relative;transform-style:preserve-3d;transition:transform 1.15s cubic-bezier(.65,.02,.25,1)}
+.room.rear{transform:rotateY(180deg)}
+.side{display:flex;align-items:flex-end;gap:calc(var(--uh)*.25);backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-style:preserve-3d}
+.side.back{position:absolute;inset:0;transform:rotateY(180deg)}
+.room.rear .side.front,.room:not(.rear) .side.back{pointer-events:none}
+
+/* ── 機櫃 ── */
+.block{display:flex;align-items:flex-end;font-size:var(--uh)}
+.rackwrap{display:flex;flex-direction:column;align-items:center}
+.rackhead{font-family:var(--f-disp);font-size:15px;font-weight:700;letter-spacing:.04em;color:var(--ink);margin-bottom:6px;display:flex;gap:8px;align-items:baseline}
+.rackhead span{font-family:var(--f-ui);font-weight:500;font-size:12px;color:var(--muted);letter-spacing:0}
+.cab{position:relative;width:13.5em;padding:1.55em .35em 1.7em;border-radius:.18em;
+  background:linear-gradient(90deg,#08090a,#1b1f22 6%,#121517 50%,#1b1f22 94%,#08090a);
+  box-shadow:0 .1em 0 #2a2f33 inset,0 1.2em 2.4em -0.6em rgba(0,0,0,.55),0 0 0 1px #050606}
+.cab::after{content:"";position:absolute;left:4%;right:4%;bottom:-.9em;height:1.2em;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.45),transparent);z-index:-1}
+.cab-top{position:absolute;left:.35em;right:.35em;top:.18em;height:1.2em;border-radius:.1em;background:repeating-linear-gradient(90deg,#0b0c0d 0 .5em,#16191b .5em .62em);box-shadow:inset 0 0 0 .06em #24292c;display:flex;align-items:center;justify-content:center}
+.cab-top .tagA{font-family:var(--f-disp);font-weight:700;font-size:.72em;background:#f2cf1d;color:#1a1600;padding:0 .5em;border-radius:.08em;line-height:1.35;box-shadow:0 .05em .1em rgba(0,0,0,.5)}
+.cab-base{position:absolute;left:.35em;right:.35em;bottom:.2em;height:1.3em;background:linear-gradient(#141719,#0a0b0c);border-radius:.08em;box-shadow:inset 0 .06em 0 #262b2e}
+.cab-base::before,.cab-base::after{content:"";position:absolute;bottom:-.75em;width:1.2em;height:.6em;border-radius:0 0 .3em .3em;background:linear-gradient(90deg,#8d9396,#d6dadc 45%,#7a8083);}
+.cab-base::before{left:.6em}.cab-base::after{right:.6em}
+.cab-body{display:flex;position:relative}
+.post{width:.95em;position:relative;background:linear-gradient(90deg,#0f1113,#1d2225 50%,#101214);}
+.post .un{position:absolute;left:0;right:0;height:1em;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);line-height:1;color:#8e999b}
+.post .un span{font-size:.34em;transform:scale(var(--uns,1))}
+.bay{position:relative;width:10.9em;height:42em;overflow:visible;
+  background:
+   repeating-linear-gradient(90deg,transparent 0 1.6em,rgba(110,130,140,.05) 1.6em 1.68em),
+   radial-gradient(120% 60% at 50% 50%,#1b2023,#0b0d0e 70%);
+  box-shadow:inset 0 0 1.2em rgba(0,0,0,.8)}
+.bay::before{content:"";position:absolute;inset:0 1.4em;background:
+  repeating-linear-gradient(90deg,transparent 0 .9em,rgba(255,255,255,.025) .9em 1em);pointer-events:none}
+.rail{position:absolute;top:0;bottom:0;width:.62em;z-index:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 17.5' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1'%3E%3Cstop offset='0' stop-color='%23848b8f'/%3E%3Cstop offset='.45' stop-color='%23c9cfd2'/%3E%3Cstop offset='1' stop-color='%23767d81'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='10' height='17.5' fill='url(%23g)'/%3E%3Crect y='0' width='10' height='.25' fill='%23555c60'/%3E%3Crect x='3.3' y='.85' width='3.5' height='3.3' fill='%230d0f10'/%3E%3Crect x='3.3' y='7.1' width='3.5' height='3.3' fill='%230d0f10'/%3E%3Crect x='3.3' y='13.35' width='3.5' height='3.3' fill='%230d0f10'/%3E%3C/svg%3E") repeat-y;background-size:100% 1em}
+.rail.l{left:0}.rail.r{right:0}
+.slots{position:absolute;inset:0;z-index:1}
+.slot{position:absolute;left:.62em;right:.62em;height:1em;display:flex;align-items:center;justify-content:center;cursor:copy;color:transparent;border-radius:.1em;transition:background .15s,color .15s}
+.slot:hover{background:rgba(242,207,29,.12);color:#f2cf1d;box-shadow:inset 0 0 0 1px rgba(242,207,29,.5)}
+.slot span{font-family:var(--f-ui);font-size:.5em;line-height:1}
+.devs{position:absolute;inset:0;z-index:2}
+.door{position:absolute;inset:1.4em .3em 1.6em;z-index:6;border-radius:.12em;pointer-events:none;transform-origin:left center;
+  background:radial-gradient(circle at center,rgba(0,0,0,.65) 38%,transparent 42%) 0 0/.32em .32em,linear-gradient(90deg,rgba(20,24,26,.82),rgba(36,42,45,.78) 50%,rgba(20,24,26,.82));
+  box-shadow:inset 0 0 0 .12em #2c3134,0 0 1em rgba(0,0,0,.4);transition:transform 1s cubic-bezier(.6,.05,.3,1),opacity .5s .5s;transform:perspective(60em) rotateY(-102deg);opacity:0}
+.door::after{content:"";position:absolute;right:.35em;top:45%;width:.22em;height:2.4em;border-radius:.1em;background:linear-gradient(90deg,#9aa0a3,#e0e4e6,#8a9093)}
+.doors-closed .door{transform:none;opacity:1;transition:transform 1s cubic-bezier(.6,.05,.3,1),opacity .1s}
+
+/* 標籤欄 */
+.labels{position:relative;width:var(--lw,150px);align-self:stretch}
+.labels-in{position:absolute;left:0;right:0;bottom:1.7em;height:42em}
+.lb{position:absolute;left:0;right:0;display:flex;align-items:center;gap:6px;font-size:min(12px,calc(var(--uh)*.62));line-height:1.15;cursor:pointer;white-space:nowrap;padding:0 6px;color:var(--ink)}
+.lb .lu{font-family:var(--f-mono);font-size:.9em;color:var(--muted);font-variant-numeric:tabular-nums;flex:none}
+.lb .ln{overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.lb::before{content:"";flex:none;width:12px;height:1px;background:var(--muted);opacity:.6}
+.labels.left .lb{flex-direction:row-reverse;text-align:right}
+.lb:hover .ln,.lb.sel .ln{color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-decoration-thickness:2px;text-underline-offset:2px}
+.lb.dim{opacity:.25}
+.lb .st{width:6px;height:6px;border-radius:50%;flex:none}
+.nolabels .labels{display:none}
+
+/* ── 設備共用 ── */
+.dev{position:absolute;bottom:calc((var(--u) - 1) * 1em);height:calc(var(--h) * 1em);left:0;width:100%;cursor:grab;touch-action:none;
+  transition:bottom .45s cubic-bezier(.3,1.3,.5,1),left .35s ease,width .35s ease,filter .2s,opacity .25s;outline:none}
+.dev.s-l{left:.62em;width:calc(50% - .62em)}
+.dev.s-r{left:50%;width:calc(50% - .62em)}
+.dev:hover{filter:brightness(1.18);z-index:3}
+.dev.sel{z-index:4}
+.dev.sel::after{content:"";position:absolute;inset:-.06em;border:.09em solid #f2cf1d;border-radius:.08em;box-shadow:0 0 .5em rgba(242,207,29,.7),inset 0 0 .4em rgba(242,207,29,.35);pointer-events:none;animation:selpulse 1.6s ease-in-out infinite}
+@keyframes selpulse{50%{box-shadow:0 0 1em rgba(242,207,29,.9),inset 0 0 .6em rgba(242,207,29,.45)}}
+.dev.dim{opacity:.22;filter:grayscale(.6)}
+.dev.hit::before{content:"";position:absolute;inset:-.1em;border-radius:.1em;box-shadow:0 0 0 .07em #4aa8e6,0 0 .8em #4aa8e6;pointer-events:none;z-index:5;animation:selpulse 1.2s infinite}
+.dev.dragging{opacity:.3}
+.dev.enter{animation:enter .55s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes enter{from{transform:translateZ(0) scale(1.06);filter:brightness(2.2) drop-shadow(0 0 .5em #f2cf1d)}to{transform:none}}
+.dev.leave{animation:leave .35s ease forwards;pointer-events:none}
+@keyframes leave{to{transform:scale(.9) translateY(.4em);opacity:0}}
+.dev.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-.25em)}40%,80%{transform:translateX(.25em)}}
+.dev.boot .led{animation-delay:calc(var(--bd,0s) + var(--d,0s))}
+.dev.ghost{cursor:pointer;z-index:1}
+.dev.ghost:hover{filter:none}
+.fp{position:absolute;inset:0;display:flex;align-items:stretch;overflow:hidden}
+
+.ear{position:relative;width:.42em;flex:none;background:linear-gradient(90deg,#1c1f22,#2d3236 50%,#17191b);box-shadow:inset 0 0 0 .02em #000}
+.ear .sc{position:absolute;left:50%;width:.2em;height:.2em;margin-left:-.1em;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e3e6e8,#6e7478 60%,#3b3f42);box-shadow:0 0 0 .02em #000}
+.ear .sc::after{content:"";position:absolute;left:20%;right:20%;top:45%;height:10%;background:#333}
+.body{flex:1;position:relative;display:flex;gap:.05em;padding:.06em .06em;min-width:0;background:linear-gradient(#25292c,#1a1d1f);box-shadow:inset 0 .03em 0 rgba(255,255,255,.08),inset 0 -.03em 0 rgba(0,0,0,.6)}
+.mesh{background:radial-gradient(circle,#050607 42%,transparent 46%) 0 0/.13em .13em,linear-gradient(#2c3135,#1f2326);box-shadow:inset 0 0 0 .02em #0b0c0d}
+.mesh.hex{background:radial-gradient(circle,#030304 45%,transparent 50%) 0 0/.16em .14em,radial-gradient(circle,#030304 45%,transparent 50%) .08em .07em/.16em .14em,#2a2e31}
+.slotsv{background:repeating-linear-gradient(90deg,#0b0c0d 0 .08em,transparent .08em .16em),#2b3034}
+.slotsh{background:repeating-linear-gradient(0deg,#0b0c0d 0 .07em,transparent .07em .17em),#2b3034}
+.tag{position:absolute;z-index:2;background:#f5d31f;color:#111;font-family:var(--f-ui);font-weight:700;font-size:.3em;line-height:1.25;padding:.05em .45em;border-radius:.08em;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis;box-shadow:0 .05em .12em rgba(0,0,0,.5);letter-spacing:.01em}
+.h1 .tag{font-size:.34em}
+.logo{position:absolute;font-family:var(--f-disp);font-weight:700;letter-spacing:.06em;line-height:1;color:#d7dbdd;white-space:nowrap}
+.led{display:inline-block;width:.11em;height:.11em;border-radius:50%;background:#2fe07a;box-shadow:0 0 .12em #2fe07a,0 0 .3em rgba(47,224,122,.6);flex:none}
+.led.a{background:#ffb627;box-shadow:0 0 .12em #ffb627,0 0 .3em rgba(255,182,39,.6)}
+.led.b{background:#3ea7ff;box-shadow:0 0 .12em #3ea7ff,0 0 .3em rgba(62,167,255,.6)}
+.led.r{background:#ff3b3b;box-shadow:0 0 .12em #ff3b3b,0 0 .3em rgba(255,59,59,.6)}
+.led.blink{animation:blink var(--sp,1.3s) steps(1,end) infinite;animation-delay:var(--d,0s)}
+.led.flick{animation:flick var(--sp,.7s) linear infinite;animation-delay:var(--d,0s)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes flick{0%,100%{opacity:1}10%{opacity:.2}20%{opacity:1}55%{opacity:.35}62%{opacity:1}}
+.st-off .led{background:#26302a!important;box-shadow:none!important;animation:none!important}
+.st-maint .led{background:#ffb627!important;box-shadow:0 0 .15em #ffb627!important;animation:blink .9s steps(1,end) infinite!important}
+.st-off .screen{background:#050607!important}
+.st-off .screen *{visibility:hidden}
+.st-off .fanblade{animation-play-state:paused!important}
+.st-off .pwrsw{background:#5a1a1a!important;box-shadow:none!important}
+
+/* 硬碟槽 */
+.bays{display:grid;gap:.035em;min-width:0}
+.drv{position:relative;background:linear-gradient(90deg,#3a3f43,#202427 18%,#1a1d20 82%,#34393d);box-shadow:inset 0 0 0 .02em #000;border-radius:.02em;overflow:hidden}
+.drv::before{content:"";position:absolute;inset:12% 18%;background:repeating-linear-gradient(0deg,#0d0f10 0 .04em,transparent .04em .08em);opacity:.8}
+.drv .tab{position:absolute;left:12%;right:12%;bottom:5%;height:16%;background:#c0306a;border-radius:.02em}
+.drv.red .tab{background:#b51f2e}
+.drv.gray .tab{background:#7c8387}
+.drv .led{position:absolute;top:6%;left:50%;margin-left:-.055em}
+.bays.horiz .drv::before{inset:18% 10%;background:repeating-linear-gradient(90deg,#0d0f10 0 .04em,transparent .04em .08em)}
+.bays.horiz .drv .tab{left:auto;right:4%;top:20%;bottom:20%;width:12%;height:auto}
+.bays.horiz .drv .led{top:50%;left:4%;margin:-.055em 0 0}
+.blk{background:linear-gradient(#141618,#0f1112);box-shadow:inset 0 0 0 .02em #000;border-radius:.02em;position:relative}
+.blk::after{content:"";position:absolute;inset:35% 30%;background:repeating-linear-gradient(0deg,#25292c 0 .03em,transparent .03em .07em)}
+.lfftray{position:relative;background:linear-gradient(#2a2e31,#17191b);box-shadow:inset 0 0 0 .02em #000;border-radius:.02em}
+.lfftray::before{content:"";position:absolute;left:6%;right:22%;top:18%;bottom:18%;background:radial-gradient(circle,#000 40%,transparent 46%) 0 0/.09em .09em}
+.lfftray .tab{position:absolute;right:4%;top:22%;bottom:22%;width:12%;background:#b51f2e;border-radius:.02em}
+.lfftray .led{position:absolute;left:3%;top:50%;margin-top:-.055em}
+
+/* 連接埠 */
+.ports{display:grid;gap:.04em .035em;align-content:center}
+.rj{position:relative;aspect-ratio:1.15/1;background:#0a0b0c;border-radius:.02em;box-shadow:inset 0 .02em 0 #000,0 0 0 .02em #3c4246}
+.rj::before{content:"";position:absolute;left:28%;right:28%;top:12%;height:20%;background:#2a2e31}
+.rj .led{position:absolute;top:-.02em;width:.07em;height:.07em}
+.rj .led:first-child{left:.02em}.rj .led:last-child{right:.02em}
+.rj.c{background:var(--cc,#d9d9d4);box-shadow:inset 0 0 0 .02em rgba(0,0,0,.4)}
+.rj.c::before{background:rgba(0,0,0,.25)}
+.sfp{position:relative;aspect-ratio:1/1.2;background:#0b0c0d;box-shadow:0 0 0 .02em #565d61;border-radius:.02em}
+.sfp.f::after{content:"";position:absolute;inset:18% 20%;background:linear-gradient(90deg,#1aa3c4 0 45%,transparent 45% 55%,#1aa3c4 55%)}
+.sfp.y::after{content:"";position:absolute;inset:18% 20%;background:linear-gradient(90deg,#f0c419 0 45%,transparent 45% 55%,#f0c419 55%)}
+.lc{position:relative;background:#1f6fb5;border-radius:.02em;box-shadow:inset 0 0 0 .02em rgba(0,0,0,.5)}
+.lc.aq{background:#2eb7b0}
+.lc::before,.lc::after{content:"";position:absolute;top:22%;bottom:22%;width:28%;background:#0d2236;border-radius:.02em}
+.lc::before{left:12%}.lc::after{right:12%}
+.lc.y::before,.lc.y::after{background:#f0c419}
+
+.usb{width:.22em;height:.09em;background:#0a0b0c;box-shadow:0 0 0 .02em #555;border-radius:.01em;flex:none}
+.vga{width:.36em;height:.16em;background:#1d4fbf;clip-path:polygon(0 0,100% 0,88% 100%,12% 100%);flex:none}
+.vga.blk2{background:#14161a}
+.pwr{width:.16em;height:.16em;border-radius:50%;background:#1b1e21;box-shadow:0 0 0 .02em #555,inset 0 0 0 .03em #2fe07a;flex:none}
+.odd{background:linear-gradient(#141618,#0d0e0f);box-shadow:inset 0 0 0 .02em #3a4044;position:relative}
+.odd::after{content:"";position:absolute;right:6%;top:35%;width:4%;height:30%;background:#555;border-radius:.01em}
+
+/* HPE 外觀 */
+.v-hpe .ear.l{background:linear-gradient(90deg,#111315,#24282b)}
+.v-hpe .ear.r{background:linear-gradient(90deg,#24282b,#111315)}
+.hpebar{position:absolute;left:18%;right:18%;height:.12em;border:.03em solid #01a982;border-radius:.02em}
+.v-hpe9 .ear{background:linear-gradient(90deg,#9ea5a9,#d9dde0 50%,#8f969a)}
+.v-hpe9 .body,.v-hpe11 .body{background:linear-gradient(#222629,#16191b)}
+/* Dell */
+.v-dell .body{background:linear-gradient(#1a1d20,#0f1112)}
+.dellx{position:absolute;inset:8% 14% 8% 10%;background:
+  linear-gradient(60deg,transparent 46%,#c5ccd0 47% 50%,transparent 51%) 0 0/1.15em 100%,
+  linear-gradient(-60deg,transparent 46%,#c5ccd0 47% 50%,transparent 51%) 0 0/1.15em 100%;opacity:.85}
+.lcd{position:absolute;background:#1546a8;box-shadow:inset 0 0 .1em #000;color:#cfe3ff;font-family:var(--f-mono);font-size:.2em;line-height:1.3;padding:0 .3em;white-space:nowrap;overflow:hidden}
+/* Supermicro */
+.v-lff12 .ear{background:linear-gradient(90deg,#a7aeb2,#e2e5e7 50%,#9aa1a5)}
+.handle{position:absolute;top:12%;bottom:12%;width:.18em;border:.05em solid #cfd3d5;border-radius:.1em;background:transparent}
+/* MSA */
+.msa{position:absolute;inset:.08em .25em;border-radius:.06em;background:linear-gradient(#d8dcde,#9aa1a5 50%,#c7ccce);padding:.12em .2em;box-shadow:inset 0 0 0 .03em #6b7276}
+.msa::before{content:"";position:absolute;inset:.12em .2em;background:radial-gradient(circle,#000 45%,transparent 50%) 0 0/.12em .12em,#1a1d1f;box-shadow:inset 0 0 0 .04em #e8c61a}
+.msa .hpebox{position:absolute;left:50%;top:50%;width:1.2em;height:.32em;margin:-.16em 0 0 -.6em;border:.06em solid #01a982;border-radius:.02em;z-index:1}
+/* IBM */
+.v-ibm .body{background:linear-gradient(#151719,#0b0c0d)}
+/* 交換器 */
+.sw .body{gap:.12em;align-items:center;padding:.08em .14em}
+.v-forti .body{background:linear-gradient(#2a2d30,#1a1c1e)}
+.v-hp .body{background:linear-gradient(#cfd4d6,#a9b0b3)}
+.v-hp .logo{color:#3b4246}
+.v-zyxel .body{background:linear-gradient(#2c3b4a,#1d2833)}
+.v-black .body{background:linear-gradient(#17191b,#0c0d0e)}
+.v-san .body{background:linear-gradient(#202326,#141618)}
+.fortilogo{position:relative;font-family:var(--f-disp);font-weight:700;font-size:.28em;color:#e9ecee;letter-spacing:.08em;white-space:nowrap;line-height:1}
+.fortilogo::first-letter{color:#e6332a}
+/* 配線面板 */
+.patch .body{background:linear-gradient(#1b1e20,#0e1011);flex-direction:column;gap:0;padding:0 .1em}
+.prow{flex:1;display:flex;align-items:center;gap:.04em;padding:0 .08em;position:relative;border-bottom:.02em solid #000}
+.prow .num{font-family:var(--f-mono);font-size:.18em;color:#9aa3a6;width:1.2em;text-align:center;flex:none}
+.prow .grp{flex:1;display:grid;grid-template-columns:repeat(12,1fr);gap:.035em}
+.prow .rj{aspect-ratio:auto;height:.42em}
+/* 排插 */
+.pdu .body{background:linear-gradient(#1c1f22,#0f1112);align-items:center;gap:.12em;padding:0 .2em}
+.outlet{width:.5em;height:.62em;border-radius:.08em;background:#0a0b0c;box-shadow:0 0 0 .03em #3d4347;position:relative;flex:none}
+.outlet::before,.outlet::after{content:"";position:absolute;top:22%;width:.06em;height:.2em;background:#2c3134}
+.outlet::before{left:28%}.outlet::after{right:28%}
+.outlet i{position:absolute;left:50%;bottom:16%;width:.09em;height:.09em;margin-left:-.045em;border-radius:50%;background:#2c3134}
+.pwrsw{width:.45em;height:.55em;border-radius:.06em;background:#e0302b;box-shadow:0 0 .25em rgba(255,60,50,.8),inset 0 -.12em 0 #9e1712;flex:none}
+.plug{position:absolute;width:.42em;height:.55em;background:#0c0d0e;border-radius:.06em;box-shadow:0 0 0 .02em #333}
+/* 層板 */
+.shelf .tray{position:absolute;left:.42em;right:.42em;bottom:0;height:72%;background:linear-gradient(#3a3f43,#24282b);clip-path:polygon(4% 0,96% 0,100% 62%,100% 100%,0 100%,0 62%)}
+.shelf .tray::after{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(#1a1d20,#0e1012);box-shadow:inset 0 .02em 0 #50575b}
+.shelf .tray i{position:absolute;bottom:62%;width:.9em;height:.08em;background:#111;border-radius:.04em}
+.shelf .ear{height:38%;align-self:flex-end}
+/* 螢幕 */
+.mon{position:absolute;left:12%;right:12%;top:.25em;bottom:1.3em;border-radius:.12em;background:linear-gradient(#202326,#0d0e10);padding:.22em .22em .4em;box-shadow:0 .1em .4em rgba(0,0,0,.5)}
+.mon .brandm{position:absolute;bottom:.08em;left:0;right:0;text-align:center;font-family:var(--f-disp);font-size:.22em;color:#8b9396;letter-spacing:.12em}
+.screen{position:relative;height:100%;background:#03140c;overflow:hidden;border-radius:.03em;box-shadow:inset 0 0 .6em rgba(0,0,0,.9)}
+.screen::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 .04em,transparent .04em .1em),radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.07),transparent 60%);pointer-events:none}
+.term{position:absolute;left:.2em;right:.2em;top:0;font-family:var(--f-mono);font-size:.26em;line-height:1.4;color:#47e38a;white-space:pre;animation:scroll 14s steps(28,end) infinite;text-shadow:0 0 .3em rgba(71,227,138,.6)}
+@keyframes scroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+.neck{position:absolute;left:50%;bottom:.45em;width:1.1em;height:.9em;margin-left:-.55em;background:linear-gradient(90deg,#141618,#2a2e31,#141618)}
+.foot{position:absolute;left:50%;bottom:.05em;width:3.6em;height:.4em;margin-left:-1.8em;border-radius:50% 50% .06em .06em;background:linear-gradient(#2c3134,#0e1011)}
+/* 鍵盤 */
+.kbd .keys{position:absolute;left:.7em;right:.7em;top:.1em;bottom:.12em;background:#0d0e10;clip-path:polygon(3% 0,97% 0,100% 100%,0 100%);padding:.06em .12em}
+.kbd .keys::before{content:"";position:absolute;inset:.08em .2em;background:
+  linear-gradient(90deg,transparent 0 .02em,#0d0e10 .02em .04em) 0 0/.2em 100%,
+  linear-gradient(0deg,transparent 0 .02em,#0d0e10 .02em .045em) 0 0/100% .17em,#3a3f44}
+.kbd .ear{background:linear-gradient(90deg,#16181a,#272b2e)}
+.tray .body{background:linear-gradient(#1b1e21,#0d0e10);align-items:center;justify-content:center}
+.tray .grip{width:3.2em;height:.32em;border-radius:.16em;background:linear-gradient(#0a0b0c,#2a2e31);box-shadow:inset 0 .04em .06em #000,0 .02em 0 #3a4044}
+.railbar{position:absolute;top:30%;bottom:30%;width:.9em;background:linear-gradient(#8f969a,#d3d7d9,#868d91)}
+/* 小型設備 */
+.box{position:absolute;bottom:.02em;border-radius:.06em;box-shadow:0 .06em .15em rgba(0,0,0,.6)}
+.box.white{background:linear-gradient(#f2f3f1,#cfd2cf)}
+.box.dark{background:linear-gradient(#2b2f32,#121416)}
+.box.blue{background:linear-gradient(#e8edf0,#c2ccd2)}
+.box .leds{position:absolute;left:8%;top:30%;display:flex;gap:.08em}
+.box .txt{position:absolute;right:6%;top:50%;transform:translateY(-50%);font-family:var(--f-ui);font-weight:700;font-size:.2em;color:#2c5aa0;white-space:nowrap}
+.antenna{position:absolute;bottom:90%;width:.06em;height:.8em;background:#1a1a1a;border-radius:.03em;transform-origin:bottom}
+/* NVR */
+.nvr .body{background:linear-gradient(#1e2124,#0f1112);flex-direction:column;padding:.2em .3em}
+.nvr .grill{flex:1;background:repeating-linear-gradient(0deg,#08090a 0 .1em,#2a2e31 .1em .22em);border-radius:.04em;margin:.2em 1.4em}
+.nvr .row{display:flex;align-items:center;gap:.15em;height:.5em}
+/* 風扇 */
+.fanu .body{background:linear-gradient(#1a1d1f,#0d0e10);justify-content:space-evenly;align-items:center}
+.fan{position:relative;height:88%;aspect-ratio:1;border-radius:50%;background:#050607;box-shadow:0 0 0 .04em #3a4044;overflow:hidden}
+.fanblade{position:absolute;inset:6%;border-radius:50%;background:conic-gradient(#3b4146 0 14%,transparent 14% 20%,#3b4146 20% 34%,transparent 34% 40%,#3b4146 40% 54%,transparent 54% 60%,#3b4146 60% 74%,transparent 74% 80%,#3b4146 80% 94%,transparent 94%);animation:spin .5s linear infinite}
+.fan::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#555b60 0 14%,transparent 15%),repeating-radial-gradient(circle,transparent 0 .1em,rgba(160,170,175,.5) .1em .12em);}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* 理線 / 線材 */
+.brush .body{background:linear-gradient(#1b1e20,#0e1011);align-items:center;padding:0 .3em}
+.brush .slit{flex:1;height:.35em;border-radius:.05em;background:repeating-linear-gradient(90deg,#000 0 .02em,#2c3034 .02em .04em);box-shadow:inset 0 0 .06em #000}
+.cablebundle{position:absolute;left:.6em;right:.6em;top:12%;bottom:12%}
+.cablebundle i{position:absolute;left:0;right:0;height:.12em;border-radius:.06em}
+/* 雜物 */
+.carton{position:absolute;bottom:.02em;background:linear-gradient(#c79a5c,#a77b43);border-radius:.03em;box-shadow:inset 0 .06em 0 #dcb57c,0 .05em .15em rgba(0,0,0,.6)}
+.carton::after{content:"";position:absolute;left:45%;width:10%;top:0;bottom:0;background:#d8c4a0;opacity:.7}
+.coil{position:absolute;bottom:.04em;border-radius:50%;border:.1em solid #dcdcd6;box-shadow:inset 0 0 0 .07em #b7b8b2}
+.blank .body{background:linear-gradient(#1c1f22,#121416)}
+/* 後視：伺服器 */
+.pcie{display:flex;gap:.05em;padding:.04em}
+.pcie i{flex:1;background:repeating-linear-gradient(0deg,#0b0c0d 0 .06em,#7f878b .06em .13em);border-radius:.01em}
+.psu{position:relative;background:linear-gradient(#3a3f43,#202427);box-shadow:inset 0 0 0 .02em #000;border-radius:.02em}
+.psu::before{content:"";position:absolute;left:8%;width:38%;top:12%;bottom:12%;background:radial-gradient(circle,#000 42%,transparent 47%) 0 0/.1em .1em}
+.psu .cord{position:absolute;right:16%;top:22%;width:22%;height:56%;background:#0a0a0a;border-radius:.03em;box-shadow:0 0 0 .02em #333}
+.psu .led{position:absolute;right:6%;top:12%}
+.psu .hd{position:absolute;right:42%;top:18%;bottom:18%;width:6%;background:#b51f2e;border-radius:.01em}
+.ctrl{position:relative;background:linear-gradient(#d26a2f,#b4521f);border-radius:.02em;box-shadow:inset 0 0 0 .03em #6e2f10;display:flex;align-items:center;gap:.06em;padding:0 .12em}
+.ghost .fp{background:repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 .2em,transparent .2em .4em),rgba(10,12,13,.55);box-shadow:inset 0 0 0 .03em rgba(160,170,175,.35);border-radius:.04em;align-items:center;justify-content:center}
+.ghost .gt{font-family:var(--f-ui);font-size:.28em;color:rgba(200,210,212,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90%}
+
+/* 熱力 */
+.heat .dev:not(.ghost)::before{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;background:var(--heat);mix-blend-mode:screen;opacity:.85;animation:heat 2.4s ease-in-out infinite alternate}
+@keyframes heat{from{opacity:.55}to{opacity:.9}}
+
+/* 拖曳 */
+.dragfloat{position:fixed;z-index:100;pointer-events:none;transform:rotate(-1.2deg) scale(1.03);filter:drop-shadow(0 12px 18px rgba(0,0,0,.55)) brightness(1.15);opacity:.95;transition:transform .1s}
+.drop{position:absolute;left:.3em;right:.3em;z-index:7;border-radius:.06em;pointer-events:none;transition:bottom .08s,height .08s;bottom:calc((var(--u) - 1)*1em);height:calc(var(--h)*1em);display:flex;align-items:center;justify-content:center}
+.drop.ok{background:rgba(47,224,122,.18);box-shadow:inset 0 0 0 .08em #2fe07a,0 0 .6em rgba(47,224,122,.6)}
+.drop.bad{background:rgba(255,70,70,.2);box-shadow:inset 0 0 0 .08em #ff4646,0 0 .6em rgba(255,70,70,.5)}
+.drop span{font-family:var(--f-mono);font-size:.38em;color:#fff;background:rgba(0,0,0,.7);padding:0 .4em;border-radius:.2em;white-space:nowrap}
+.drop.s-l{right:50%}.drop.s-r{left:50%}
+
+/* ── 面板 ── */
+.panel{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 8px;flex:none}
+.tabs button{border:0;background:none;padding:11px 10px 9px;cursor:pointer;color:var(--muted);font-size:13px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
+.pane{flex:1;overflow:auto;padding:16px;min-height:0}
+.pane h2{font-family:var(--f-disp);font-size:20px;letter-spacing:.02em;margin:0 0 2px;line-height:1.15;text-wrap:balance}
+.pane h3{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px;font-weight:700}
+.sub{color:var(--muted);font-size:12px}
+.preview{border-radius:8px;background:radial-gradient(120% 120% at 50% 0,#22282b,#0c0e0f);padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0 6px}
+.preview .pv{position:relative}
+.preview .pv .dev{cursor:default;transition:none}
+.preview .pvl{font-size:11px;color:#9aa5a7;letter-spacing:.06em}
+.pvrow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;justify-content:center}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form .full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:6px;background:var(--panel-2);padding:6px 8px;min-width:0;width:100%}
+.field textarea{resize:vertical;min-height:60px}
+.pos{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px}
+.pos .k{font-size:12px;color:var(--muted)}
+.pad{display:grid;grid-template-columns:repeat(3,34px);grid-template-rows:repeat(3,30px);gap:4px}
+.pad button{border:1px solid var(--line);background:var(--panel);border-radius:6px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.pad button:hover{border-color:var(--accent)}
+.pad .mid{font-family:var(--f-mono);font-size:11px;border:0;background:transparent;cursor:default;line-height:1.1;text-align:center}
+.seg.sm button{padding:4px 9px;font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);font-size:12px;overflow-wrap:anywhere}
+.hint{font-size:12px;color:var(--muted);background:var(--panel-2);border:1px dashed var(--line);border-radius:8px;padding:10px 12px}
+.keys-help{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:12px}
+kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel-2);white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;color:var(--muted);font-weight:600;padding:6px 6px;border-bottom:1px solid var(--line);position:sticky;top:-16px;background:var(--panel);cursor:pointer;white-space:nowrap}
+.tbl td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr{cursor:pointer}
+.tbl tbody tr:hover td{background:var(--panel-2)}
+.tbl tr.sel td{background:color-mix(in srgb,var(--accent) 18%,transparent)}
+.tbl .m{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:1px 7px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill i{width:6px;height:6px;border-radius:50%}
+.free{display:flex;flex-direction:column;gap:6px}
+.freerow{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)}
+.freerow .r{font-family:var(--f-disp);font-weight:700;font-size:16px;width:22px}
+.freerow .u{font-family:var(--f-mono);flex:1}
+.freebar{display:flex;flex-direction:column-reverse;gap:1px;width:16px;height:126px;flex:none}
+.freebar i{flex:1;background:var(--line);border-radius:1px}
+.freebar i.f{background:var(--ok)}
+.log{display:flex;flex-direction:column;gap:0}
+.log div{display:grid;grid-template-columns:62px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.log time{color:var(--muted);font-family:var(--f-mono);font-size:11px}
+.datafoot{flex:none;border-top:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px}
+.sync{display:inline-flex;align-items:center;gap:6px;color:var(--muted);flex:1;min-width:140px}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync.ok i{background:var(--ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ok) 25%,transparent)}
+.sync.busy i{background:var(--warn);animation:blink .8s steps(1,end) infinite}
+.sync.err i{background:var(--bad)}
+
+/* 對話框 */
+.modal{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,10,11,.55);backdrop-filter:blur(3px);animation:fade .2s}
+@keyframes fade{from{opacity:0}}
+.dialog{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);width:min(920px,100%);max-height:100%;display:flex;flex-direction:column;animation:pop .28s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes pop{from{transform:translateY(14px) scale(.98)}}
+.dialog.sm{width:min(440px,100%)}
+.dhead{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.dhead h2{margin:0;font-family:var(--f-disp);font-size:20px;flex:1}
+.dbody{padding:16px 18px;overflow:auto}
+.dfoot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.tcard{border:1px solid var(--line);border-radius:8px;background:var(--panel-2);padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:center;text-align:center;transition:border-color .15s,transform .15s}
+.tcard:hover{border-color:var(--muted);transform:translateY(-1px)}
+.tcard[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent)}
+.tcard .mini{background:#0e1112;border-radius:4px;padding:6px 4px;width:100%;display:flex;justify-content:center;align-items:flex-end;height:64px;overflow:hidden}
+.tcard .mini .pv{position:relative}
+.tcard b{font-size:13px}
+.addgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:18px;margin-top:14px}
+textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2);padding:10px}
+
+.tooltip{position:fixed;z-index:150;pointer-events:none;background:#0f1314;color:#e8ecea;border:1px solid #2b3336;border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:260px;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.tooltip.on{opacity:1;transform:none}
+.tooltip b{display:block;font-size:13px}
+.tooltip .m{font-family:var(--f-mono);color:#a9b4b2;font-size:11px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);z-index:250;background:#14191a;color:#eef2f0;border:1px solid #2c3436;border-radius:10px;padding:10px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .2s,transform .25s;font-size:13px;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translateX(-50%);pointer-events:auto}
+.toast.bad{border-color:#7a2a2a}
+.toast button{border:0;background:#f2cf1d;color:#1a1600;font-weight:700;border-radius:6px;padding:3px 10px;cursor:pointer}
+
+@media (max-width:1000px){
+  body{overflow:auto}
+  .app{height:auto;min-height:100%}
+  .main{grid-template-columns:1fr}
+  .stage{min-height:70vh}
+  .panel{border-left:0;border-top:1px solid var(--line)}
+  .pane{max-height:none;overflow:visible}
+  .search input{width:150px}
+  .addgrid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .stats .stat:nth-child(3){display:none}
+  .form{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div><h1>T1 機房機櫃</h1><small>A、B 兩座 42U 機櫃</small></div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="檢視面">
+      <button id="vFront" aria-pressed="true">正面</button>
+      <button id="vRear" aria-pressed="false">背面</button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="搜尋名稱、型號、IP" aria-label="搜尋設備">
+    </div>
+    <button class="btn" id="undoBtn" title="復原 (Ctrl+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>復原</button>
+    <button class="btn primary" id="addBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新增設備</button>
+  </header>
+
+  <div class="main">
+    <section class="stage" id="stage">
+      <div class="floor" aria-hidden="true"></div>
+      <div class="stage-tools" id="tools">
+        <button class="chip" id="tLabels" aria-pressed="true">名稱標示</button>
+        <button class="chip" id="tDoor" aria-pressed="false">機櫃門</button>
+        <button class="chip" id="tHeat" aria-pressed="false">熱力分布</button>
+        <span class="zoom"><label for="zoomR">縮放</label><input id="zoomR" type="range" min="10" max="40" step="1" value="20"><button class="chip" id="zoomAuto" aria-pressed="true" style="padding:1px 8px">自動</button></span>
+        <span id="typeChips" style="display:contents"></span>
+      </div>
+      <div class="scene" id="scene">
+        <div class="room" id="room">
+          <div class="side front" id="sideFront"></div>
+          <div class="side back" id="sideBack"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="tabs" role="tablist">
+        <button role="tab" data-tab="info" aria-selected="true">設備</button>
+        <button role="tab" data-tab="list" aria-selected="false">清單</button>
+        <button role="tab" data-tab="free" aria-selected="false">空位</button>
+        <button role="tab" data-tab="log" aria-selected="false">異動紀錄</button>
+      </div>
+      <div class="pane" id="pane"></div>
+      <div class="datafoot">
+        <span class="sync" id="sync"><i></i><span>讀取中…</span></span>
+        <button class="btn" id="expBtn">匯出 JSON</button>
+        <button class="btn" id="impBtn">匯入</button>
+        <input type="file" id="impFile" accept=".json,application/json" hidden>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="tooltip" id="tip"></div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastAct" hidden></button></div>
+<div id="modalRoot"></div>
+
+<script>
+(function(){
+"use strict";
+/* ───────── 型別定義 ───────── */
+const TYPES={
+  server:{label:'伺服器',h:2,face:'both',w:450,color:'#4aa8e6',variants:{hpe11:'HPE ProLiant Gen11',hpe9:'HPE ProLiant Gen9/Gen10',hpe1u:'HPE 1U',dell:'Dell PowerEdge 1U',ibm:'IBM System x',generic:'通用伺服器'}},
+  storage:{label:'儲存設備',h:2,face:'both',w:400,color:'#9b7be0',variants:{msa:'HPE MSA 儲存陣列',lff12:'12 槽 3.5 吋（Supermicro）'}},
+  switch:{label:'交換器',h:1,face:'front',w:60,color:'#2fc171',variants:{forti:'FortiSwitch',hp:'HP / Aruba',zyxel:'Zyxel',black:'黑色通用',san:'SAN 光纖交換器'}},
+  firewall:{label:'防火牆',h:1,face:'front',w:45,color:'#ef5b5b',variants:{forti:'FortiGate'}},
+  patch:{label:'配線面板',h:1,face:'front',w:0,color:'#8fa0a6',variants:{rj45:'RJ45 網路',fiber:'光纖 LC'}},
+  pdu:{label:'電源排插',h:1,face:'front',w:0,color:'#e9a03a',variants:{std:'橫式排插'}},
+  shelf:{label:'層板',h:1,face:'both',w:0,color:'#7d878b',variants:{std:'固定層板'}},
+  monitor:{label:'螢幕',h:8,face:'front',w:25,color:'#4ac6c0',variants:{lcd:'液晶螢幕'}},
+  kvm:{label:'鍵盤／滑軌',h:1,face:'front',w:0,color:'#b0a58f',variants:{keys:'鍵盤',tray:'鍵盤滑軌'}},
+  appliance:{label:'小型網通',h:1,face:'front',w:15,color:'#e07bb0',variants:{modem:'數據機',cht:'電信業者設備',voip:'語音閘道器',pbx:'電話總機',hub:'小烏龜（小型集線器）'}},
+  nvr:{label:'監控主機',h:4,face:'front',w:80,color:'#d0b74a',variants:{std:'NVR／DVR'}},
+  fan:{label:'機櫃風扇',h:1,face:'both',w:40,color:'#66b2ff',variants:{std:'四風扇'}},
+  cable:{label:'理線／線材',h:1,face:'front',w:0,color:'#a3a3a3',variants:{loose:'線材',brush:'毛刷理線架'}},
+  misc:{label:'雜物／其他',h:1,face:'front',w:0,color:'#b98b54',variants:{box:'雜物堆',blank:'盲板'}}
+};
+const POWERED=new Set(['server','storage','switch','firewall','monitor','appliance','nvr','fan']);
+const FACE_LABEL={front:'前側',rear:'後側',both:'前後全深'};
+const SIDE_LABEL={full:'滿寬',left:'左半',right:'右半'};
+const STATUS={online:{t:'運作中',c:'var(--ok)'},maint:{t:'維護中',c:'var(--warn)'},off:{t:'關機／離線',c:'var(--muted)'}};
+
+/* ───────── 原始盤點（2026/10/16，依現場清單與照片） ───────── */
+const SEED=[
+ ['B',2,2,'PVE02','HPE ProLiant DL380 Gen11','server','hpe11','both'],
+ ['B',5,2,'PVE01','HPE ProLiant DL380 Gen11','server','hpe11','both'],
+ ['B',7,2,'ESXi03','HPE ProLiant DL380 Gen9','server','hpe9','both'],
+ ['B',9,1,'Profet AI','Dell 1U 伺服器','server','dell','both',{notes:'原始清單寫作「Profrt AI」，照片標籤為 Profet AI'}],
+ ['B',11,1,'層板','固定層板','shelf','std','both'],
+ ['B',12,2,'NAS','Supermicro 2U 伺服器','storage','lff12','front',{notes:'機身標籤：Synology(Black)；13U 後側掛有排插'}],
+ ['B',13,1,'排插（13U 後側）','','pdu','std','rear'],
+ ['B',15,1,'排插','','pdu','std','front'],
+ ['B',16,1,'排插','','pdu','std','front'],
+ ['B',17,1,'AD Server01','HP 1U Server','server','hpe1u','both',{w:250}],
+ ['B',19,1,'SolidWorks License','IBM System x3250 M3','server','ibm','both',{w:200,notes:'型號依照片判讀'}],
+ ['B',20,1,'鍵盤滑軌','','kvm','tray','front'],
+ ['B',21,1,'鍵盤','','kvm','keys','front'],
+ ['B',22,1,'Forti 101F','FortiGate 101F','firewall','forti','front'],
+ ['B',23,1,'層板','固定層板','shelf','std','both'],
+ ['B',24,8,'螢幕','','monitor','lcd','front',{notes:'放置於 23U 層板上'}],
+ ['B',33,1,'Server Farm Switch','','switch','black','both',{reversed:true,ip:'192.168.1.4',notes:'埠口朝機櫃後側，機身標籤 T1-ServerFarm'}],
+ ['B',34,2,'HP Storage','HPE MSA 2060 FC','storage','msa','both',{notes:'型號依照片標籤'}],
+ ['B',37,1,'SAN Switch','','switch','san','both',{reversed:true,notes:'埠口朝機櫃後側'}],
+ ['B',38,2,'ESXi02','HPE ProLiant DL380','server','hpe9','both',{notes:'機身標籤 ESXI-VM2'}],
+ ['B',40,2,'ESXi01','HPE ProLiant DL380','server','hpe9','both',{notes:'機身標籤 ESXI-VM1'}],
+ ['B',42,1,'Panel','光纖配線面板','patch','fiber','front'],
+ ['A',1,1,'網路線','','cable','loose','front'],
+ ['A',2,8,'Panel','RJ45 配線面板','patch','rj45','front'],
+ ['A',10,1,'數據機','','appliance','modem','front'],
+ ['A',14,1,'排插','','pdu','std','front'],
+ ['A',15,1,'層板','固定層板','shelf','std','both'],
+ ['A',16,2,'雜物・小烏龜','','misc','box','front',{notes:'放置於 15U 層板上'}],
+ ['A',18,1,'Forti 224E-POE','FortiSwitch 224E-POE','switch','forti','front',{w:200}],
+ ['A',19,1,'借來的中華電信','中華電信設備（借用）','appliance','cht','front'],
+ ['A',20,1,'Forti 124F','FortiSwitch 124F','switch','forti','front'],
+ ['A',22,1,'Forti 124F','FortiSwitch 124F','switch','forti','front'],
+ ['A',23,1,'英藤吉德 CS-210','','appliance','pbx','front'],
+ ['A',24,1,'Forti 124F','FortiSwitch 124F','switch','forti','front'],
+ ['A',25,1,'TG 語音閘道器','','appliance','voip','front',{notes:'後側另有小烏龜'}],
+ ['A',25,1,'小烏龜（25U 後側）','','appliance','hub','rear'],
+ ['A',28,1,'HP 6300M Switch','Core Switch','switch','hp','front',{notes:'核心交換器'}],
+ ['A',29,1,'層板','固定層板','shelf','std','both'],
+ ['A',30,4,'監視器主機','','nvr','std','front'],
+ ['A',34,1,'層板','固定層板','shelf','std','both'],
+ ['A',35,1,'Zyxel 1920-24HP','Zyxel GS1920-24HP','switch','zyxel','front',{w:200}],
+ ['A',36,1,'排插','','pdu','std','front'],
+ ['A',37,1,'線','','cable','brush','front'],
+ ['A',38,1,'排插','','pdu','std','front'],
+ ['A',42,1,'機櫃風扇','','fan','std','both',{notes:'原始清單記為「42.3」'}]
+];
+function seedDevices(){
+  return SEED.map((r,i)=>{
+    const [rack,u,h,name,model,type,variant,face,ex]=r;
+    return Object.assign({id:'d'+(i+1).toString(36)+'x'+rack.toLowerCase(),rack,u,h,name,model,type,variant,face,side:'full',reversed:false,status:'online',ip:'',sn:'',notes:'',w:defaultW(type,h)},ex||{});
+  });
+}
+function defaultW(type,h){const t=TYPES[type];if(!t)return 0;if(type==='server')return h>=2?450:250;return t.w}
+
+/* ───────── 狀態 ───────── */
+const S={devices:seedDevices(),log:[],view:'front',sel:null,q:'',typeFilter:null,labels:true,door:false,heat:false,zoom:null,tab:'info',listSort:'rack'};
+const clientId=Math.random().toString(36).slice(2,10);
+let history=[],rev=0,remoteExists=null;
+
+/* ───────── 小工具 ───────── */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let s=hash(String(seed))||1;return()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return (s%10000)/10000}}
+const uRange=d=>d.h>1?`U${d.u}–${d.u+d.h-1}`:`U${d.u}`;
+const clone=o=>JSON.parse(JSON.stringify(o));
+function nowLabel(iso){const d=new Date(iso);const p=n=>String(n).padStart(2,'0');return `${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`}
+
+/* ───────── 設備外觀產生器 ───────── */
+function led(r,cls='',opt={}){const d=(r()*2).toFixed(2);const sp=(0.5+r()*1.4).toFixed(2);return `<i class="led ${cls}" style="--d:${d}s;--sp:${sp}s${opt.st?';'+opt.st:''}"></i>`}
+function ears(kind,h,extraR=''){
+  const sc=h>=2?'<i class="sc" style="top:18%"></i><i class="sc" style="bottom:18%"></i>':'<i class="sc" style="top:50%;margin-top:-.1em"></i>';
+  return [`<i class="ear l">${sc}</i>`,`<i class="ear r">${sc}${extraR}</i>`];
+}
+function bays(cols,rows,filled,r,opt={}){
+  let s=`<div class="bays ${opt.horiz?'horiz':''}" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);${opt.style||''}">`;
+  for(let i=0;i<cols*rows;i++){
+    if(i<filled)s+=`<i class="drv ${opt.tab||''}"><i class="tab"></i>${led(r,r()>.55?'blink':'',{})}</i>`;
+    else s+='<i class="blk"></i>';
+  }
+  return s+'</div>';
+}
+function ports(n,rows,r,opt={}){
+  const cols=Math.ceil(n/rows);
+  let s=`<div class="ports" style="grid-template-columns:repeat(${cols},1fr);${opt.style||''}">`;
+  const colors=['#d9d9d4','#d9d9d4','#e8e8e2','#3a8de0','#f2d22e','#e74c3c','#2ecc71'];
+  for(let i=0;i<n;i++){
+    const used=r()<(opt.use??.7);
+    const c=used&&opt.cables!==false?`c" style="--cc:${colors[Math.floor(r()*colors.length)]}`:'';
+    s+=`<i class="rj ${c}">${used?led(r,'flick')+led(r,r()>.5?'a':''):''}</i>`;
+  }
+  return s+'</div>';
+}
+function sfps(n,r,kind='f'){let s='<div class="ports" style="grid-template-columns:repeat('+Math.ceil(n/2)+',1fr);width:'+(Math.ceil(n/2)*.3)+'em">';for(let i=0;i<n;i++){const u=r()<.6;s+=`<i class="sfp ${u?kind:''}">${u?led(r,'flick',{st:'position:absolute;top:-.03em;left:.02em;width:.07em;height:.07em'}):''}</i>`}return s+'</div>'}
+function tag(name,pos){return `<b class="tag" style="${pos}">${esc(name)}</b>`}
+
+function buildFront(d){
+  const r=rng(d.id+d.type+d.variant+d.h);
+  const h=d.h, t=d.type, v=d.variant;
+  const nm=d.name;
+  if(t==='server'){
+    if(v==='hpe11'||v==='hpe9'){
+      const [el,er]=ears('hpe',h,`<i class="hpebar" style="bottom:${h>=2?'34%':'40%'}"></i>`);
+      const drives=bays(8,1,v==='hpe11'?4:8,r,{tab:v==='hpe9'?'':'gray',style:'flex:0 0 31%'});
+      const media=v==='hpe11'
+        ?`<div style="flex:0 0 25%;display:flex;flex-direction:column;gap:.06em"><div style="flex:1;display:flex;align-items:center;justify-content:space-around;background:#16191b;box-shadow:inset 0 0 0 .02em #000"><i class="usb"></i><i class="vga blk2" style="width:.26em"></i><i class="usb"></i></div><div class="mesh" style="flex:1.4"></div></div>`
+        :`<div style="flex:0 0 25%;display:flex;flex-direction:column;gap:.06em"><div class="odd" style="flex:.6"></div><div style="flex:.5;display:flex;align-items:center;justify-content:space-around;background:#16191b"><i class="usb"></i><i class="vga"></i><i class="usb"></i></div><div class="mesh" style="flex:1"></div></div>`;
+      const ctl=`<div style="flex:0 0 5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.08em;background:#121416">${led(r)}${led(r,'')}${led(r,'b')}<i class="pwr"></i></div>`;
+      return `<div class="fp srv v-hpe ${'v-'+v} h${Math.min(h,2)}">${el}<div class="body">${media}<div class="mesh" style="flex:1;position:relative">${tag(nm,'left:6%;top:6%')}</div>${drives}${ctl}</div>${er}</div>`;
+    }
+    if(v==='hpe1u'){
+      const [el,er]=ears('hpe',h,'<i class="hpebar" style="bottom:30%"></i>');
+      return `<div class="fp srv v-hpe h1">${el}<div class="body"><div class="odd" style="flex:0 0 22%;position:relative">${tag(nm,'left:4%;top:-2%;font-size:.26em')}</div>${bays(2,2,4,r,{horiz:true,tab:'red',style:'flex:0 0 34%'})}<div style="flex:0 0 6%;display:flex;align-items:center;justify-content:center;gap:.06em;background:#121416">${led(r)}<i class="usb"></i></div><div class="mesh hex" style="flex:1"></div><div style="flex:0 0 4%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.06em">${led(r)}<i class="pwr"></i></div></div>${er}</div>`;
+    }
+    if(v==='dell'){
+      const [el,er]=ears('dell',h);
+      return `<div class="fp srv v-dell h1">${el}<div class="body"><div style="flex:1;position:relative"><div class="dellx"></div><span class="logo" style="left:44%;top:50%;transform:translateY(-50%);font-size:.42em;color:#e2e6e8">DELL</span>${tag(nm,'right:16%;top:12%')}<span class="lcd" style="right:2%;bottom:14%">ST-${(hash(d.id)%99999).toString().padStart(5,'0')}</span></div><div style="flex:0 0 4%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.06em">${led(r,'b')}<i class="pwr"></i></div></div>${er}</div>`;
+    }
+    if(v==='ibm'){
+      const [el,er]=ears('ibm',h);
+      return `<div class="fp srv v-ibm h1">${el}<div class="body"><div style="flex:0 0 8%;display:flex;align-items:center;justify-content:space-around;">${led(r)}<i class="pwr"></i></div><div style="flex:0 0 30%;position:relative;background:#101214">${tag(nm,'left:4%;bottom:4%;font-size:.26em')}<i class="usb" style="position:absolute;right:10%;top:22%"></i></div><div class="lfftray" style="flex:1"><i class="tab"></i>${led(r,'blink')}</div><div class="lfftray" style="flex:1"><i class="tab"></i>${led(r,'blink')}</div><span class="logo" style="right:1%;top:4%;font-size:.22em;color:#b9c0c3">IBM</span></div>${er}</div>`;
+    }
+    const [el,er]=ears('g',h);
+    return `<div class="fp srv h${Math.min(h,2)}">${el}<div class="body">${bays(h>=2?6:4,h>=2?2:1,h>=2?8:3,r,{horiz:true,tab:'red',style:'flex:0 0 46%'})}<div class="mesh" style="flex:1;position:relative">${tag(nm,'left:6%;top:8%')}</div><div style="flex:0 0 5%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.06em">${led(r)}${led(r,'blink')}<i class="pwr"></i></div></div>${er}</div>`;
+  }
+  if(t==='storage'){
+    if(v==='msa'){
+      return `<div class="fp v-msa"><div class="msa"><i class="hpebox"></i></div><div style="position:absolute;left:.05em;top:.2em;display:flex;flex-direction:column;gap:.1em">${led(r)}${led(r)}</div>${tag(nm,'left:24%;top:16%')}</div>`;
+    }
+    const rows=Math.max(1,Math.min(3,h*1.5|0)),cols=4;
+    let trays='';for(let i=0;i<rows*cols;i++)trays+=`<i class="lfftray"><i class="tab"></i>${led(r,r()>.4?'blink':'')}</i>`;
+    const [el,er]=ears('sm',h,'<i class="handle" style="right:-.02em"></i>');
+    return `<div class="fp v-lff12">${el.replace('</i>','<i class="handle" style="left:-.02em"></i></i>')}<div class="body" style="padding:.05em"><div style="flex:1;display:grid;grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr);gap:.04em;position:relative">${trays}${tag(nm,'left:1%;top:2%')}</div></div>${er}</div>`;
+  }
+  if(t==='switch'||t==='firewall'){
+    const [el,er]=ears('sw',h);
+    if(v==='san'){
+      return `<div class="fp sw v-san">${el}<div class="body"><span class="logo" style="position:relative;font-size:.24em;color:#c8ced1">SAN</span>${tag(nm,'left:10%;top:6%;font-size:.25em')}<div style="flex:1"></div>${sfps(24,r,'f')}<div style="display:flex;flex-direction:column;gap:.06em">${led(r)}${led(r,'blink')}</div></div>${er}</div>`;
+    }
+    const n=t==='firewall'?20:(/224|48/.test(d.model+d.name)?24:24);
+    const isF=v==='forti';
+    const logo=isF?`<span class="fortilogo">${t==='firewall'?'FortiGate':'FortiSwitch'}</span>`:v==='hp'?`<span class="logo" style="position:relative;font-size:.3em">HPE</span>`:v==='zyxel'?`<span class="logo" style="position:relative;font-size:.28em;color:#cfe0f0">ZYXEL</span>`:`<span class="logo" style="position:relative;font-size:.22em;color:#9aa3a6">SWITCH</span>`;
+    const lbl=d.ip?`<span style="position:absolute;left:7%;bottom:6%;font-family:var(--f-mono);font-size:.17em;background:#f5f5ef;color:#111;padding:0 .3em;line-height:1.3">${esc(d.ip)}</span>`:'';
+    return `<div class="fp sw v-${v||'black'}">${el}<div class="body" style="position:relative">${tag(nm,'left:3%;top:4%;font-size:.24em;max-width:24%')}${lbl}<div style="flex:0 0 21%;display:flex;flex-direction:column;justify-content:flex-end;gap:.04em;padding-bottom:.04em">${logo}<span style="display:flex;gap:.05em">${led(r)}${led(r,'blink')}</span></div>${ports(n,2,r,{style:'flex:1'})}${sfps(4,r,t==='firewall'?'y':'f')}</div>${er}</div>`;
+  }
+  if(t==='patch'){
+    const [el,er]=ears('p',1);
+    let rows='';
+    for(let i=0;i<h;i++){
+      if(v==='fiber'){let s='';for(let j=0;j<12;j++)s+=`<i class="lc ${j%3===2?'aq':''} ${r()<.6?'y':''}"></i>`;rows+=`<div class="prow"><span class="num">${h-i}</span><div class="grp" style="height:.5em">${s}</div></div>`}
+      else{let a='',b='';for(let j=0;j<12;j++){const u1=r()<.65,u2=r()<.55;a+=`<i class="rj ${u1?'c':''}" ${u1?'style="--cc:#d9d9d4"':''}></i>`;b+=`<i class="rj ${u2?'c':''}" ${u2?`style="--cc:${r()<.15?'#3a8de0':'#d9d9d4'}"`:''}></i>`}
+        rows+=`<div class="prow"><span class="num">${h-i}</span><div class="grp">${a}</div><div class="grp">${b}</div></div>`}
+    }
+    return `<div class="fp patch">${el}<div class="body" style="position:relative">${rows}${h>1?tag(nm,'right:2%;top:1%'):''}</div>${er}</div>`;
+  }
+  if(t==='pdu'){
+    const [el,er]=ears('p',1);let o='';for(let i=0;i<8;i++)o+='<i class="outlet"><i></i></i>';
+    let plugs='';for(let i=0;i<8;i++)if(r()<.45)plugs+=`<i class="plug" style="left:calc(${9.5+i*9.2}% );top:50%;transform:translateY(-50%)"></i>`;
+    return `<div class="fp pdu">${el}<div class="body" style="position:relative">${o}${plugs}<div style="flex:1"></div><i class="pwrsw"></i></div>${er}</div>`;
+  }
+  if(t==='shelf'){
+    return `<div class="fp shelf"><i class="ear l"><i class="sc" style="top:50%;margin-top:-.1em"></i></i><div style="flex:1"></div><i class="ear r"><i class="sc" style="top:50%;margin-top:-.1em"></i></i><div class="tray"><i style="left:22%"></i><i style="right:22%"></i></div></div>`;
+  }
+  if(t==='monitor'){
+    const lines=['root@pve01:~# qm list','  VMID NAME        STATUS','   101 dc01        running','   102 erp-app     running','   105 file-srv    running','root@pve01:~# uptime',' 11:12  up 84 days, load 0.42','[ OK ] vmbr0: link up 10Gb/s','[ OK ] cluster quorum: 3/3','esxi01 > vmkping 10.0.0.2','64 bytes  time=0.214 ms','backup job 02:00 ... done','storage msa-lun3  71% used','> _'];
+    const txt=esc(lines.concat(lines).join('\n'));
+    return `<div class="fp"><div class="mon"><div class="screen"><div class="term">${txt}</div></div><span class="brandm">ViewSonic</span></div><i class="neck"></i><i class="foot"></i></div>`;
+  }
+  if(t==='kvm'){
+    if(v==='tray'){const [el,er]=ears('k',1);return `<div class="fp tray">${el}<div class="body"><i class="railbar" style="left:.1em"></i><i class="grip"></i><i class="railbar" style="right:.1em"></i></div>${er}</div>`}
+    const [el,er]=ears('k',1);return `<div class="fp kbd">${el}<div style="flex:1;position:relative;background:linear-gradient(#202326,#141618)"><div class="keys"></div></div>${er}</div>`;
+  }
+  if(t==='appliance'){
+    if(v==='voip'||v==='pbx'){
+      const [el,er]=ears('a',1);
+      const pbx=v==='pbx';
+      return `<div class="fp sw" >${el}<div class="body" style="background:${pbx?'linear-gradient(#c9cdcf,#a1a7aa)':'linear-gradient(#202326,#121416)'};position:relative">${tag(nm,'left:3%;top:8%;font-size:.26em')}<div style="flex:0 0 30%"></div><div style="display:flex;gap:.08em;align-items:center">${led(r)}${led(r,'blink')}${led(r,'a')}</div>${ports(pbx?16:8,pbx?2:1,r,{style:'flex:0 0 '+(pbx?'40%':'24%'),use:.5})}<div style="flex:1"></div><span class="logo" style="position:relative;font-size:.22em;color:${pbx?'#3b4246':'#a7b0b3'}">${pbx?'CS-210':'VoIP GW'}</span></div>${er}</div>`;
+    }
+    if(v==='modem')return `<div class="fp"><div class="box white" style="left:22%;width:42%;height:66%"><span class="leds">${led(r)}${led(r,'flick')}${led(r,'flick')}${led(r,'b')}</span><span class="txt" style="color:#555">MODEM</span></div><i class="antenna" style="left:26%;transform:rotate(-12deg)"></i><i class="antenna" style="left:60%;transform:rotate(10deg)"></i>${tag(nm,'left:66%;bottom:12%')}</div>`;
+    if(v==='cht')return `<div class="fp"><div class="box blue" style="left:8%;width:58%;height:80%;border-top:.06em solid #2c5aa0"><span class="leds">${led(r)}${led(r,'flick')}${led(r,'flick')}</span><span class="txt">中華電信</span></div>${tag(nm,'left:68%;bottom:20%')}</div>`;
+    return `<div class="fp"><div class="box white" style="left:30%;width:34%;height:62%"><span class="leds">${led(r)}${led(r,'flick')}${led(r,'flick')}${led(r,'flick')}${led(r,'flick')}</span></div>${tag(nm,'left:66%;bottom:14%')}</div>`;
+  }
+  if(t==='nvr'){
+    const [el,er]=ears('n',h);
+    return `<div class="fp nvr">${el}<div class="body" style="position:relative">${tag(nm,'left:3%;top:4%')}<div class="grill"></div><div class="row"><span class="logo" style="position:relative;font-size:.3em;color:#aab3b6">NVR</span><div style="flex:1"></div><span style="font-family:var(--f-mono);font-size:.2em;color:#ff6a6a">REC</span>${led(r,'r blink',{st:'--sp:1.6s'})}${led(r)}${led(r,'flick')}<i class="usb"></i><i class="pwr"></i></div></div>${er}</div>`;
+  }
+  if(t==='fan'){
+    const [el,er]=ears('f',1);
+    let f='';for(let i=0;i<4;i++)f+=`<i class="fan"><i class="fanblade" style="animation-duration:${(.35+r()*.2).toFixed(2)}s"></i></i>`;
+    return `<div class="fp fanu">${el}<div class="body">${f}</div>${er}</div>`;
+  }
+  if(t==='cable'){
+    if(v==='brush'){const [el,er]=ears('c',1);return `<div class="fp brush">${el}<div class="body"><i class="slit"></i></div>${er}</div>`}
+    const cols=['#d8d8d2','#cfcfc8','#3a8de0','#f2d22e','#1f2224','#d8d8d2','#2ecc71'];let c='';
+    for(let i=0;i<7;i++)c+=`<i style="top:${8+i*12}%;background:${cols[i]};transform:rotate(${(r()*4-2).toFixed(1)}deg);left:${(r()*8).toFixed(0)}%;right:${(r()*8).toFixed(0)}%"></i>`;
+    return `<div class="fp"><div class="cablebundle">${c}</div></div>`;
+  }
+  if(t==='misc'){
+    if(v==='blank'){const [el,er]=ears('b',h);return `<div class="fp blank">${el}<div class="body"></div>${er}</div>`}
+    return `<div class="fp"><div class="carton" style="left:10%;width:30%;height:${Math.min(80,30+h*25)}%"></div><div class="box white" style="left:44%;width:20%;height:34%"><span class="leds">${led(r)}${led(r,'flick')}${led(r,'flick')}</span></div><i class="coil" style="left:68%;width:${h*.7}em;height:${h*.7}em"></i>${tag(nm,'right:2%;top:4%')}</div>`;
+  }
+  return `<div class="fp"><div class="body">${tag(nm,'left:4%;top:10%')}</div></div>`;
+}
+
+function buildRear(d){
+  const r=rng(d.id+'rear'+d.type+d.h);
+  const h=d.h,t=d.type,v=d.variant;
+  const [el,er]=ears('x',h);
+  if(t==='server'){
+    const psu=`<div style="flex:0 0 32%;display:flex;flex-direction:${h>=2?'column':'row'};gap:.05em">${'<i class="psu" style="flex:1"><i class="cord"></i><i class="hd"></i>'+led(r)+'</i>'}${'<i class="psu" style="flex:1"><i class="cord"></i><i class="hd"></i>'+led(r)+'</i>'}</div>`;
+    const io=`<div style="flex:0 0 26%;display:flex;flex-direction:column;justify-content:flex-end;gap:.05em;padding:.04em"><div style="display:flex;gap:.05em;align-items:center"><i class="vga"></i><i class="usb"></i><i class="usb"></i></div>${ports(4,1,r,{style:'width:100%',use:.8})}</div>`;
+    const pcie=`<div class="pcie" style="flex:1">${'<i></i>'.repeat(h>=2?6:3)}</div>`;
+    return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#4d5357,#2f3437)">${pcie}${io}${psu}</div>${er}</div>`;
+  }
+  if(t==='storage'){
+    if(v==='msa'){
+      const ctl=`<div class="ctrl" style="flex:1">${sfps(4,r,'f')}${ports(2,1,r,{style:'width:.7em'})}<div style="flex:1"></div>${led(r)}${led(r,'flick')}</div>`;
+      return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#3e4447,#25292c)"><i class="psu" style="flex:0 0 16%"><i class="cord"></i>${led(r)}</i><div style="flex:1;display:flex;flex-direction:column;gap:.06em">${ctl}${ctl}</div><i class="psu" style="flex:0 0 16%"><i class="cord"></i>${led(r)}</i></div>${er}</div>`;
+    }
+    return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#4d5357,#2f3437)"><div class="pcie" style="flex:1">${'<i></i>'.repeat(5)}</div>${ports(4,1,r,{style:'flex:0 0 22%'})}<div style="flex:0 0 30%;display:flex;flex-direction:column;gap:.05em"><i class="psu" style="flex:1"><i class="cord"></i>${led(r)}</i><i class="psu" style="flex:1"><i class="cord"></i>${led(r)}</i></div></div>${er}</div>`;
+  }
+  if(t==='switch'||t==='firewall'){
+    return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#35393c,#222628);align-items:center;gap:.15em;padding:0 .2em"><i class="fan" style="height:80%"><i class="fanblade"></i></i><i class="fan" style="height:80%"><i class="fanblade"></i></i><div style="flex:1" class="slotsv"></div><i class="psu" style="flex:0 0 18%;height:86%"><i class="cord"></i>${led(r)}</i></div>${er}</div>`;
+  }
+  if(t==='fan')return buildFront(d);
+  if(t==='shelf')return buildFront(d);
+  if(t==='nvr')return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#2c3134,#16191b);align-items:flex-end;padding:.2em"><div class="slotsv" style="flex:1;height:60%"></div>${ports(2,1,r,{style:'width:.8em'})}<i class="psu" style="flex:0 0 18%;height:40%"><i class="cord"></i>${led(r)}</i></div>${er}</div>`;
+  return `<div class="fp">${el}<div class="body" style="background:linear-gradient(#2c3134,#16191b)"><div class="slotsv" style="flex:1"></div></div>${er}</div>`;
+}
+
+function isVisible(d,face){return d.face==='both'||d.face===face}
+/* 某一面要呈現的外觀：反向安裝者，前後外觀互換 */
+function faceHTML(d,face){
+  const showFront=(face==='front')!==!!d.reversed;
+  return showFront?buildFront(d):buildRear(d);
+}
+function heatColor(d){
+  const w=d.w||0; if(!w||d.status==='off')return 'transparent';
+  const k=Math.min(1,w/500);
+  const hue=200-200*k;
+  return `linear-gradient(90deg,hsla(${hue},95%,55%,.0),hsla(${hue},95%,55%,.55) 50%,hsla(${hue},95%,55%,.0))`;
+}
+
+/* ───────── 機櫃骨架 ───────── */
+const devEls=new Map();
+const bayEls={};
+function buildRooms(){
+  const make=(rack,face)=>{
+    const labelsLeft=(face==='front')===(rack==='A');
+    const lbl=`<div class="labels ${labelsLeft?'left':''}"><div class="labels-in" data-labels="${rack}-${face}"></div></div>`;
+    let un='';for(let u=1;u<=42;u++)un+=`<span class="un" style="bottom:${u-1}em"><span>${u}</span></span>`;
+    let slots='';for(let u=1;u<=42;u++)slots+=`<div class="slot" data-u="${u}" style="bottom:${u-1}em"><span>＋ U${u}</span></div>`;
+    const rackHTML=`<div class="rackwrap"><div class="rackhead">${rack} 機櫃 <span>${face==='front'?'正面':'背面（由後方看）'}</span></div>
+      <div class="cab"><div class="cab-top"><span class="tagA">T1-${rack}</span></div>
+        <div class="cab-body"><div class="post">${un}</div>
+          <div class="bay" data-rack="${rack}" data-face="${face}"><i class="rail l"></i><i class="rail r"></i><div class="slots">${slots}</div><div class="devs"></div></div>
+          <div class="post">${un}</div></div>
+        <div class="door"></div>
+        <div class="cab-base"></div></div></div>`;
+    return `<div class="block" data-rack="${rack}" data-face="${face}">${labelsLeft?lbl+rackHTML:rackHTML+lbl}</div>`;
+  };
+  $('#sideFront').innerHTML=make('A','front')+make('B','front');
+  $('#sideBack').innerHTML=make('B','rear')+make('A','rear');
+  document.querySelectorAll('.bay').forEach(b=>{bayEls[b.dataset.rack+'-'+b.dataset.face]=b});
+}
+
+/* ───────── 渲染 ───────── */
+function sideClass(d,face){
+  if(d.side==='full')return '';
+  const s=face==='rear'?(d.side==='left'?'right':'left'):d.side; // 後視時左右鏡像
+  return s==='left'?'s-l':'s-r';
+}
+function matches(d){
+  if(S.typeFilter&&d.type!==S.typeFilter)return false;
+  if(!S.q)return true;
+  const q=S.q.toLowerCase();
+  return [d.name,d.model,d.ip,d.sn,d.notes,TYPES[d.type]?.label].some(x=>String(x||'').toLowerCase().includes(q));
+}
+function renderRacks(opts={}){
+  const seen=new Set();
+  const filtering=!!(S.q||S.typeFilter);
+  for(const d of S.devices){
+    for(const face of ['front','rear']){
+      const key=d.id+'|'+face;seen.add(key);
+      const vis=isVisible(d,face);
+      const container=bayEls[d.rack+'-'+face].querySelector('.devs');
+      let el=devEls.get(key);
+      const sig=[d.type,d.variant,d.h,d.name,d.model,d.ip,d.reversed,vis,d.status].join('¦');
+      if(!el){el=document.createElement('div');el.dataset.id=d.id;el.dataset.face=face;el.tabIndex=vis?0:-1;container.appendChild(el);devEls.set(key,el);if(!opts.initial)el.classList.add('enter')}
+      else if(el.parentNode!==container){container.appendChild(el);el.classList.remove('enter');void el.offsetWidth;el.classList.add('enter')}
+      if(el._sig!==sig){el.innerHTML=vis?faceHTML(d,face):`<div class="fp"><span class="gt">${esc(d.name)}・${face==='rear'?'前側設備背板':'後側設備'}</span></div>`;el._sig=sig}
+      el.style.setProperty('--u',d.u);el.style.setProperty('--h',d.h);
+      el.style.setProperty('--heat',heatColor(d));
+      el.style.setProperty('--bd',((42-d.u)*0.04).toFixed(2)+'s');
+      const cls=['dev','t-'+d.type,sideClass(d,face),vis?'':'ghost','st-'+(POWERED.has(d.type)?d.status:'online')];
+      if(S.sel===d.id)cls.push('sel');
+      if(filtering){cls.push(matches(d)?(S.q?'hit':''):'dim')}
+      ['enter','shake','dragging','boot'].forEach(c=>{if(el.classList.contains(c))cls.push(c)});
+      el.className=cls.filter(Boolean).join(' ');
+      el.setAttribute('aria-label',`${d.rack} 機櫃 ${uRange(d)} ${d.name}`);
+    }
+  }
+  for(const [key,el] of devEls){if(!seen.has(key)){devEls.delete(key);el.classList.add('leave');setTimeout(()=>el.remove(),360)}}
+  renderLabels();renderStats();
+}
+function renderLabels(){
+  for(const rack of ['A','B'])for(const face of ['front','rear']){
+    const box=document.querySelector(`[data-labels="${rack}-${face}"]`);
+    const list=S.devices.filter(d=>d.rack===rack&&isVisible(d,face)).sort((a,b)=>a.u-b.u);
+    box.innerHTML=list.map(d=>{
+      const center=d.u-1+d.h/2;
+      const dim=(S.q||S.typeFilter)&&!matches(d);
+      const sc=POWERED.has(d.type)?`<i class="st" style="background:${STATUS[d.status]?.c}"></i>`:'';
+      return `<div class="lb ${S.sel===d.id?'sel':''} ${dim?'dim':''}" data-id="${d.id}" style="bottom:calc(var(--uh) * ${center});transform:translateY(50%)"><span class="lu">${d.h>1?d.u+'–'+(d.u+d.h-1):d.u}</span>${sc}<span class="ln">${esc(d.name)}${d.side!=='full'?' ('+SIDE_LABEL[d.side]+')':''}</span></div>`;
+    }).join('');
+  }
+}
+function usedU(rack){const s=new Set();for(const d of S.devices)if(d.rack===rack)for(let i=0;i<d.h;i++)s.add(d.u+i);return s}
+function renderStats(){
+  let html='';
+  for(const rack of ['A','B']){
+    const used=usedU(rack).size;const n=S.devices.filter(d=>d.rack===rack).length;
+    const w=S.devices.filter(d=>d.rack===rack&&d.status!=='off').reduce((a,d)=>a+(+d.w||0),0);
+    const pct=used/42*100;
+    html+=`<div class="stat"><b>${rack}</b><span class="num">${used}/42U</span><span class="meter"><i style="width:${pct}%;background:${pct>85?'var(--bad)':pct>65?'var(--warn)':'var(--ok)'}"></i></span><span class="num" title="估計功耗">${n} 台・約 ${(w/1000).toFixed(1)} kW</span></div>`;
+  }
+  $('#stats').innerHTML=html;
+}
+
+/* ───────── 版面縮放 ───────── */
+function fit(){
+  const stage=$('#stage');const st=stage.getBoundingClientRect();
+  const narrow=window.innerWidth<=1000;
+  const lw=S.labels&&st.width>720?Math.min(160,Math.max(110,st.width*.12)):0;
+  document.documentElement.style.setProperty('--lw',lw+'px');
+  $('#scene').classList.toggle('nolabels',!lw);
+  let uh;
+  if(S.zoom)uh=S.zoom;
+  else{
+    const uhW=(st.width-40-2*lw)/27.6;
+    const uhH=(st.height-130)/46.6;
+    uh=narrow?uhW:Math.min(uhW,uhH);
+    uh=Math.max(9,Math.min(34,Math.floor(uh*2)/2));
+    $('#zoomR').value=Math.round(uh);
+  }
+  document.documentElement.style.setProperty('--uh',uh+'px');
+  document.querySelectorAll('.post .un>span').forEach(()=>{});
+  document.documentElement.style.setProperty('--uns',uh<14?'.8':'1');
+}
+
+/* ───────── 碰撞與移動 ───────── */
+function conflicts(c,ignoreId){
+  return S.devices.filter(o=>{
+    if(o.id===ignoreId||o.rack!==c.rack)return false;
+    if(c.u>o.u+o.h-1||o.u>c.u+c.h-1)return false;
+    const faceHit=c.face==='both'||o.face==='both'||c.face===o.face;
+    const sideHit=c.side==='full'||o.side==='full'||c.side===o.side;
+    return faceHit&&sideHit;
+  });
+}
+function validate(c,ignoreId){
+  if(c.u<1||c.u+c.h-1>42)return {ok:false,msg:`超出機櫃範圍（${c.rack} 機櫃只有 U1–U42）`};
+  const cs=conflicts(c,ignoreId);
+  if(cs.length)return {ok:false,msg:`${c.rack} ${uRange(c)} 已被「${cs[0].name}」佔用`,with:cs};
+  return {ok:true};
+}
+function findFree(rack,h,face,side,prefer){
+  const order=[];for(let u=1;u<=43-h;u++)order.push(u);
+  if(prefer)order.sort((a,b)=>Math.abs(a-prefer)-Math.abs(b-prefer));
+  for(const u of order){if(validate({rack,u,h,face,side},null).ok)return u}
+  return null;
+}
+function snapshot(){history.push(clone(S.devices));if(history.length>40)history.shift();$('#undoBtn').disabled=false}
+function addLog(msg){S.log.unshift({t:new Date().toISOString(),msg});if(S.log.length>80)S.log.length=80}
+function commit(msg){if(msg)addLog(msg);renderRacks();renderPane();save()}
+function getDev(id){return S.devices.find(d=>d.id===id)}
+function shake(id){for(const f of ['front','rear']){const el=devEls.get(id+'|'+f);if(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),450)}}}
+function moveDev(id,patch,quiet){
+  const d=getDev(id);if(!d)return false;
+  const c=Object.assign({},d,patch);
+  const v=validate(c,id);
+  if(!v.ok){shake(id);toast(v.msg,true);return false}
+  snapshot();
+  const parts=[];
+  if(patch.rack!==undefined&&patch.rack!==d.rack)parts.push(`移至 ${c.rack} 機櫃`);
+  if(patch.u!==undefined&&patch.u!==d.u)parts.push(`${uRange(d)} → ${uRange(c)}`);
+  if(patch.face!==undefined&&patch.face!==d.face)parts.push(`安裝面改為${FACE_LABEL[c.face]}`);
+  if(patch.side!==undefined&&patch.side!==d.side)parts.push(`寬度改為${SIDE_LABEL[c.side]}`);
+  if(patch.h!==undefined&&patch.h!==d.h)parts.push(`高度改為 ${c.h}U`);
+  Object.assign(d,patch);
+  commit(parts.length?`「${d.name}」${parts.join('，')}`:null);
+  return true;
+}
+function undo(){
+  if(!history.length)return;
+  S.devices=history.pop();
+  if(S.sel&&!getDev(S.sel))S.sel=null;
+  $('#undoBtn').disabled=!history.length;
+  commit('復原上一步');toast('已復原');
+}
+function removeDev(id){
+  const d=getDev(id);if(!d)return;
+  snapshot();S.devices=S.devices.filter(x=>x.id!==id);if(S.sel===id)S.sel=null;
+  commit(`刪除「${d.name}」（${d.rack} ${uRange(d)}）`);
+  toast(`已刪除「${d.name}」`,false,'復原',undo);
+}
+function duplicate(id){
+  const d=getDev(id);if(!d)return;
+  let rack=d.rack,u=findFree(rack,d.h,d.face,d.side,d.u+d.h);
+  if(u==null){rack=rack==='A'?'B':'A';u=findFree(rack,d.h,d.face,d.side,d.u)}
+  if(u==null){toast('兩座機櫃都沒有足夠空間',true);return}
+  snapshot();
+  const n=Object.assign(clone(d),{id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),rack,u,name:d.name+' 複本'});
+  S.devices.push(n);S.sel=n.id;commit(`複製「${d.name}」到 ${rack} ${uRange(n)}`);
+}
+
+/* ───────── 選取、檢視 ───────── */
+function select(id,scroll){
+  S.sel=id;renderRacks();if(S.tab!=='info'&&id&&!scroll)setTab('info');else renderPane();
+  if(id&&scroll){const el=devEls.get(id+'|'+(isVisible(getDev(id),S.view)?S.view:(S.view==='front'?'rear':'front')));if(el&&!isVisible(getDev(id),S.view))setView(S.view==='front'?'rear':'front');el&&el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'})}
+}
+function setView(v){
+  S.view=v;$('#room').classList.toggle('rear',v==='rear');
+  $('#vFront').setAttribute('aria-pressed',v==='front');$('#vRear').setAttribute('aria-pressed',v==='rear');
+}
+
+/* ───────── 面板 ───────── */
+function setTab(t){S.tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));renderPane()}
+function devPreview(d,face,maxW,maxH){
+  const fs=Math.min(maxW/10.9,maxH/d.h,40);
+  const w=d.side==='full'?10.9:5.45;
+  const tmp=Object.assign({},d,{u:1,side:'full'});
+  const vis=isVisible(d,face);
+  const inner=vis?faceHTML(tmp,face):`<div class="fp"><span class="gt">此面無設備外觀</span></div>`;
+  return `<div class="pv" style="font-size:${fs}px;width:${w}em;height:${d.h}em"><div class="dev ${vis?'':'ghost'} st-${POWERED.has(d.type)?d.status:'online'}" style="--u:1;--h:${d.h};width:100%">${inner}</div></div>`;
+}
+function opt(obj,val){return Object.entries(obj).map(([k,v])=>`<option value="${k}" ${k===val?'selected':''}>${esc(typeof v==='string'?v:v.label)}</option>`).join('')}
+function renderPane(){
+  const p=$('#pane');
+  if(S.tab==='info')return renderInfo(p);
+  if(S.tab==='list')return renderList(p);
+  if(S.tab==='free')return renderFree(p);
+  if(S.tab==='log')return renderLog(p);
+}
+function renderInfo(p){
+  const d=S.sel&&getDev(S.sel);
+  if(!d){
+    const total=S.devices.length;const free=84-usedU('A').size-usedU('B').size;
+    p.innerHTML=`<h2>T1 機房</h2><div class="sub">共 ${total} 筆設備，剩餘 ${free}U 空位</div>
+    <div class="hint" style="margin-top:14px">點一下機櫃裡的設備即可檢視與編輯；按住拖曳可上下移動或拖到另一座機櫃。點空的 U 位可在該位置新增設備。</div>
+    <h3>鍵盤快速鍵</h3>
+    <div class="keys-help"><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>上下移動 1U</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>移到左邊／右邊的機櫃</span><span><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd></span><span>半寬設備靠左／靠右</span><span><kbd>F</kbd></span><span>切換安裝面（前側／後側／全深）</span><span><kbd>V</kbd></span><span>翻轉檢視正面／背面</span><span><kbd>Delete</kbd></span><span>刪除選取的設備</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>復原</span><span><kbd>Esc</kbd></span><span>取消選取</span></div>
+    <h3>圖例</h3>
+    <div class="keys-help"><span><span class="pill"><i style="background:var(--ok)"></i>運作中</span></span><span>綠燈恆亮、存取燈閃爍</span><span><span class="pill"><i style="background:var(--warn)"></i>維護中</span></span><span>指示燈改為琥珀色閃爍</span><span><span class="pill"><i style="background:var(--muted)"></i>關機</span></span><span>指示燈熄滅、風扇停止</span><span><span class="pill" style="border-style:dashed">斜紋</span></span><span>另一面的設備（例如從背面看到前側設備的背板）</span></div>`;
+    return;
+  }
+  const T=TYPES[d.type]||{label:d.type,variants:{}};
+  const pw=Math.max(200,p.clientWidth-56);
+  p.innerHTML=`
+   <div style="display:flex;align-items:flex-start;gap:8px"><div style="flex:1;min-width:0"><h2>${esc(d.name)}</h2><div class="sub">${esc(T.label)}・${d.rack} 機櫃 ${uRange(d)}・${FACE_LABEL[d.face]}</div></div><button class="btn ghost" id="pClose" title="取消選取" aria-label="取消選取">✕</button></div>
+   <div class="preview"><div class="pvl">正面</div>${devPreview(d,'front',pw,Math.min(130,d.h*42))}<div class="pvl">背面</div>${devPreview(d,'rear',pw,Math.min(130,d.h*42))}</div>
+   <h3>位置</h3>
+   <div class="pos">
+     <span class="k">上下 / 機櫃</span>
+     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div class="pad">
+        <span></span><button data-mv="up" title="上移 1U" aria-label="上移 1U">▲</button><span></span>
+        <button data-mv="left" title="移到左邊機櫃" aria-label="移到左邊機櫃">◀</button><span class="mid">${d.rack}<br>U${d.u}</span><button data-mv="right" title="移到右邊機櫃" aria-label="移到右邊機櫃">▶</button>
+        <span></span><button data-mv="down" title="下移 1U" aria-label="下移 1U">▼</button><span></span>
+      </div>
+      <div class="field" style="width:84px"><label for="fU">起始 U</label><input id="fU" type="number" min="1" max="42" value="${d.u}"></div>
+     </div>
+     <span class="k">安裝面</span>
+     <div class="seg sm" data-grp="face">${['front','rear','both'].map(k=>`<button data-v="${k}" aria-pressed="${d.face===k}">${FACE_LABEL[k]}</button>`).join('')}</div>
+     <span class="k">左右寬度</span>
+     <div class="seg sm" data-grp="side">${['left','full','right'].map(k=>`<button data-v="${k}" aria-pressed="${d.side===k}">${SIDE_LABEL[k]}</button>`).join('')}</div>
+     <span class="k">埠口方向</span>
+     <label style="display:flex;gap:6px;align-items:center;font-size:13px"><input type="checkbox" id="fRev" ${d.reversed?'checked':''}> 反向安裝（設備正面朝機櫃後方）</label>
+   </div>
+   <h3>基本資料</h3>
+   <div class="form">
+     <div class="field full"><label for="fName">名稱</label><input id="fName" value="${esc(d.name)}"></div>
+     <div class="field full"><label for="fModel">型號</label><input id="fModel" value="${esc(d.model)}"></div>
+     <div class="field"><label for="fType">類型</label><select id="fType">${opt(TYPES,d.type)}</select></div>
+     <div class="field"><label for="fVar">外觀樣式</label><select id="fVar">${opt(T.variants,d.variant)}</select></div>
+     <div class="field"><label for="fH">高度（U）</label><input id="fH" type="number" min="1" max="42" value="${d.h}"></div>
+     <div class="field"><label for="fSt">狀態</label><select id="fSt" ${POWERED.has(d.type)?'':'disabled'}>${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${d.status===k?'selected':''}>${v.t}</option>`).join('')}</select></div>
+     <div class="field"><label for="fIp">IP 位址</label><input id="fIp" value="${esc(d.ip)}" placeholder="例如 192.168.1.10"></div>
+     <div class="field"><label for="fW">估計功耗（W）</label><input id="fW" type="number" min="0" step="10" value="${+d.w||0}"></div>
+     <div class="field full"><label for="fSn">序號／資產編號</label><input id="fSn" value="${esc(d.sn)}"></div>
+     <div class="field full"><label for="fNotes">備註</label><textarea id="fNotes">${esc(d.notes)}</textarea></div>
+   </div>
+   <div class="actions"><button class="btn" id="pDup">複製一台</button><button class="btn danger" id="pDel">刪除設備</button></div>`;
+  p.querySelector('#pClose').onclick=()=>select(null);
+  p.querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>nudge(b.dataset.mv));
+  p.querySelector('#fU').onchange=e=>{const u=parseInt(e.target.value,10);if(!moveDev(d.id,{u}))e.target.value=d.u};
+  p.querySelector('#fH').onchange=e=>{const h=Math.max(1,Math.min(42,parseInt(e.target.value,10)||1));if(!moveDev(d.id,{h}))e.target.value=d.h};
+  p.querySelectorAll('[data-grp]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>moveDev(d.id,{[g.dataset.grp]:b.dataset.v})));
+  p.querySelector('#fRev').onchange=e=>editField(d.id,'reversed',e.target.checked,'埠口方向');
+  const textF=[['fName','name','名稱'],['fModel','model','型號'],['fIp','ip','IP'],['fSn','sn','序號'],['fNotes','notes','備註']];
+  for(const [fid,key,lab] of textF){const el=p.querySelector('#'+fid);el.onchange=()=>editField(d.id,key,el.value.trim(),lab)}
+  p.querySelector('#fW').onchange=e=>editField(d.id,'w',Math.max(0,+e.target.value||0),'功耗');
+  p.querySelector('#fSt').onchange=e=>editField(d.id,'status',e.target.value,'狀態');
+  p.querySelector('#fType').onchange=e=>{const t=e.target.value;const v=Object.keys(TYPES[t].variants)[0];snapshot();Object.assign(d,{type:t,variant:v});commit(`「${d.name}」類型改為${TYPES[t].label}`)};
+  p.querySelector('#fVar').onchange=e=>editField(d.id,'variant',e.target.value,'外觀樣式');
+  p.querySelector('#pDel').onclick=()=>removeDev(d.id);
+  p.querySelector('#pDup').onclick=()=>duplicate(d.id);
+}
+function editField(id,key,val,label){
+  const d=getDev(id);if(!d||d[key]===val)return;
+  snapshot();const old=d[key];d[key]=val;
+  let msg;
+  if(key==='name')msg=`「${old}」更名為「${val}」`;
+  else if(key==='status')msg=`「${d.name}」狀態改為${STATUS[val].t}`;
+  else if(key==='reversed')msg=`「${d.name}」${val?'改為反向安裝':'改為正向安裝'}`;
+  else msg=`「${d.name}」更新${label}`;
+  commit(msg);
+}
+function renderList(p){
+  const rows=S.devices.filter(matches).slice().sort((a,b)=>{
+    if(S.listSort==='name')return a.name.localeCompare(b.name,'zh-Hant');
+    if(S.listSort==='type')return (TYPES[a.type]?.label||'').localeCompare(TYPES[b.type]?.label||'','zh-Hant')||a.rack.localeCompare(b.rack)||b.u-a.u;
+    return a.rack.localeCompare(b.rack)||b.u-a.u;
+  });
+  p.innerHTML=`<div class="sub" style="margin-bottom:8px">${rows.length} 筆${S.q||S.typeFilter?'（已套用篩選）':''}，點標題排序，點列定位到機櫃</div>
+  <div style="overflow-x:auto"><table class="tbl"><thead><tr><th data-s="rack">位置</th><th data-s="name">名稱／型號</th><th data-s="type">類型</th></tr></thead><tbody>
+  ${rows.map(d=>`<tr data-id="${d.id}" class="${S.sel===d.id?'sel':''}"><td class="m">${d.rack} ${uRange(d)}<div class="sub">${FACE_LABEL[d.face]}</div></td><td><b>${esc(d.name)}</b>${d.model?`<div class="sub">${esc(d.model)}</div>`:''}${d.ip?`<div class="sub m">${esc(d.ip)}</div>`:''}</td><td><span class="pill"><i style="background:${TYPES[d.type]?.color}"></i>${esc(TYPES[d.type]?.label||d.type)}</span></td></tr>`).join('')}
+  </tbody></table></div>`;
+  p.querySelectorAll('th').forEach(th=>th.onclick=()=>{S.listSort=th.dataset.s;renderList(p)});
+  p.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>select(tr.dataset.id,true));
+}
+function freeRanges(rack,face){
+  const occ=new Set();
+  for(const d of S.devices)if(d.rack===rack&&(face==='any'||d.face==='both'||d.face===face))for(let i=0;i<d.h;i++)occ.add(d.u+i);
+  const out=[];let s=null;
+  for(let u=1;u<=43;u++){const f=u<=42&&!occ.has(u);if(f&&s==null)s=u;if(!f&&s!=null){out.push([s,u-1]);s=null}}
+  return {out,occ};
+}
+function renderFree(p){
+  let html='<div class="sub" style="margin-bottom:10px">以前側安裝面計算的連續空位，點「新增」直接在該位置放設備。</div><div class="free">';
+  for(const rack of ['A','B']){
+    const {out,occ}=freeRanges(rack,'front');
+    let bar='';for(let u=1;u<=42;u++)bar+=`<i class="${occ.has(u)?'':'f'}"></i>`;
+    const tot=out.reduce((a,[s,e])=>a+e-s+1,0);
+    html+=`<div style="display:flex;gap:12px;align-items:flex-start;margin-top:6px"><div class="freebar" title="${rack} 機櫃空位分布（下方為 U1）">${bar}</div><div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0"><div style="font-family:var(--f-disp);font-size:18px;font-weight:700">${rack} 機櫃 <span class="sub" style="font-family:var(--f-ui);font-weight:400">共 ${tot}U 空位</span></div>
+      ${out.length?out.map(([s,e])=>`<div class="freerow"><span class="u">${s===e?'U'+s:`U${s}–${e}`}</span><span class="sub">${e-s+1}U</span><button class="btn" data-add="${rack}:${s}:${e-s+1}">新增</button></div>`).join(''):'<div class="sub">沒有空位</div>'}</div></div>`;
+  }
+  p.innerHTML=html+'</div>';
+  p.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const [rack,u,n]=b.dataset.add.split(':');openAdd({rack,u:+u,max:+n})});
+}
+function renderLog(p){
+  p.innerHTML=S.log.length?`<div class="log">${S.log.map(l=>`<div><time>${nowLabel(l.t)}</time><span>${esc(l.msg)}</span></div>`).join('')}</div>`:'<div class="hint">還沒有異動。移動、新增、刪除或修改設備後，這裡會留下紀錄。</div>';
+}
+
+/* ───────── 新增設備 ───────── */
+function openAdd(pre={}){
+  const st={type:pre.type||'server',variant:null,name:'',model:'',rack:pre.rack||'A',u:pre.u||null,h:null,face:null,side:'full',ip:''};
+  const setType=t=>{st.type=t;const T=TYPES[t];st.variant=Object.keys(T.variants)[0];st.h=pre.max?Math.min(T.h,pre.max):T.h;st.face=T.face;st.side='full'};
+  setType(st.type);
+  const root=$('#modalRoot');
+  const card=(t)=>{const T=TYPES[t];const sample={id:'sample'+t,type:t,variant:Object.keys(T.variants)[0],h:Math.min(T.h,2),name:T.label,model:'',face:T.face,side:'full',status:'online',u:1,ip:''};
+    return `<button class="tcard" data-t="${t}" aria-pressed="${st.type===t}"><div class="mini">${devPreview(sample,'front',130,48)}</div><b>${T.label}</b></button>`};
+  root.innerHTML=`<div class="modal" id="addModal"><div class="dialog" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <div class="dhead"><h2 id="addTitle">新增設備</h2><button class="btn ghost" data-close aria-label="關閉">✕</button></div>
+    <div class="dbody"><div class="sub" style="margin-bottom:8px">1. 選擇類型</div><div class="types">${Object.keys(TYPES).map(card).join('')}</div>
+      <div class="addgrid"><div><div class="sub" style="margin-bottom:8px">2. 填寫資料</div><div class="form" id="addForm"></div></div>
+      <div><div class="sub" style="margin-bottom:8px">預覽</div><div class="preview" id="addPrev" style="margin:0"></div><div class="sub" id="addMsg" style="margin-top:8px"></div></div></div></div>
+    <div class="dfoot"><button class="btn" data-close>取消</button><button class="btn primary" id="addOk">放進機櫃</button></div></div></div>`;
+  const close=()=>{root.innerHTML='';document.removeEventListener('keydown',onEsc)};
+  const onEsc=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',onEsc);
+  root.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);
+  root.querySelector('.modal').addEventListener('pointerdown',e=>{if(e.target.classList.contains('modal'))close()});
+  const form=root.querySelector('#addForm');
+  const drawForm=()=>{
+    const T=TYPES[st.type];
+    if(st.u==null||!validate({rack:st.rack,u:st.u,h:st.h,face:st.face,side:st.side},null).ok){const f=findFree(st.rack,st.h,st.face,st.side,st.u||pre.u||1);if(f!=null)st.u=f}
+    form.innerHTML=`
+      <div class="field full"><label for="aName">名稱</label><input id="aName" value="${esc(st.name)}" placeholder="例如 PVE03"></div>
+      <div class="field full"><label for="aModel">型號</label><input id="aModel" value="${esc(st.model)}" placeholder="例如 HPE ProLiant DL380 Gen11"></div>
+      <div class="field"><label for="aVar">外觀樣式</label><select id="aVar">${opt(T.variants,st.variant)}</select></div>
+      <div class="field"><label for="aH">高度（U）</label><input id="aH" type="number" min="1" max="42" value="${st.h}"></div>
+      <div class="field"><label for="aRack">機櫃</label><select id="aRack"><option value="A" ${st.rack==='A'?'selected':''}>A 機櫃</option><option value="B" ${st.rack==='B'?'selected':''}>B 機櫃</option></select></div>
+      <div class="field"><label for="aU">起始 U</label><input id="aU" type="number" min="1" max="42" value="${st.u??''}"></div>
+      <div class="field"><label for="aFace">安裝面</label><select id="aFace">${opt(FACE_LABEL,st.face)}</select></div>
+      <div class="field"><label for="aSide">寬度</label><select id="aSide">${opt(SIDE_LABEL,st.side)}</select></div>
+      <div class="field full"><label for="aIp">IP 位址（選填）</label><input id="aIp" value="${esc(st.ip)}"></div>`;
+    const bind=(id,key,num)=>{const el=form.querySelector(id);el.oninput=el.onchange=()=>{st[key]=num?parseInt(el.value,10):el.value;if(key!=='name'&&key!=='model'&&key!=='ip'){if(key!=='u')st.u=st.u;drawPrev()}else drawPrev()}};
+    bind('#aName','name');bind('#aModel','model');bind('#aIp','ip');bind('#aVar','variant');bind('#aH','h',true);bind('#aU','u',true);bind('#aFace','face');bind('#aSide','side');
+    form.querySelector('#aRack').onchange=e=>{st.rack=e.target.value;st.u=null;drawForm()};
+    drawPrev();
+  };
+  const drawPrev=()=>{
+    const d={id:'new',type:st.type,variant:st.variant,h:st.h||1,name:st.name||TYPES[st.type].label,model:st.model,face:st.face,side:st.side,status:'online',ip:st.ip,u:1};
+    root.querySelector('#addPrev').innerHTML=`<div class="pvl">正面</div>${devPreview(d,'front',300,Math.min(150,d.h*44))}`;
+    const v=st.u?validate({rack:st.rack,u:st.u,h:st.h||1,face:st.face,side:st.side},null):{ok:false,msg:'這座機櫃沒有足夠的連續空位'};
+    const m=root.querySelector('#addMsg');
+    m.innerHTML=v.ok?`<span style="color:var(--ok)">●</span> 將放在 ${st.rack} 機櫃 ${uRange({u:st.u,h:st.h||1})}（${FACE_LABEL[st.face]}）`:`<span style="color:var(--bad)">●</span> ${esc(v.msg)}`;
+    root.querySelector('#addOk').disabled=!v.ok;
+  };
+  root.querySelectorAll('.tcard').forEach(b=>b.onclick=()=>{setType(b.dataset.t);root.querySelectorAll('.tcard').forEach(x=>x.setAttribute('aria-pressed',x===b));st.u=pre.u||st.u;drawForm()});
+  root.querySelector('#addOk').onclick=()=>{
+    const T=TYPES[st.type];
+    const d={id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),rack:st.rack,u:st.u,h:st.h||1,name:st.name.trim()||T.label,model:st.model.trim(),type:st.type,variant:st.variant,face:st.face,side:st.side,reversed:false,status:'online',ip:st.ip.trim(),sn:'',notes:'',w:defaultW(st.type,st.h||1)};
+    if(!validate(d,null).ok)return;
+    snapshot();S.devices.push(d);S.sel=d.id;close();
+    if(!isVisible(d,S.view))setView(d.face);
+    commit(`新增「${d.name}」於 ${d.rack} ${uRange(d)}`);
+    toast(`已新增「${d.name}」`);
+    setTab('info');
+  };
+  drawForm();
+  setTimeout(()=>root.querySelector('#aName')?.focus(),50);
+}
+
+/* ───────── 拖曳 ───────── */
+let drag=null;
+function onDown(e){
+  const el=e.target.closest('.dev');if(!el||!el.dataset.id||e.button>0)return;
+  if(el.closest('.preview'))return;
+  const d=getDev(el.dataset.id);if(!d)return;
+  const rect=el.getBoundingClientRect();
+  drag={id:d.id,el,startX:e.clientX,startY:e.clientY,offY:e.clientY-rect.top,offX:e.clientX-rect.left,w:rect.width,h:rect.height,moved:false,target:null,pid:e.pointerId};
+  el.setPointerCapture(e.pointerId);
+}
+function onMove(e){
+  if(!drag){hoverTip(e);return}
+  const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
+  if(!drag.moved){if(Math.hypot(dx,dy)<5)return;drag.moved=true;startFloat();hideTip()}
+  drag.float.style.left=(e.clientX-drag.offX)+'px';drag.float.style.top=(e.clientY-drag.offY)+'px';
+  const d=getDev(drag.id);
+  drag.float.style.display='none';
+  const under=document.elementsFromPoint(e.clientX,e.clientY);
+  drag.float.style.display='';
+  const bay=under.find(x=>x.classList&&x.classList.contains('bay')&&x.dataset.face===S.view);
+  clearDrop();
+  if(!bay){drag.target=null;return}
+  const br=bay.getBoundingClientRect();const uh=br.height/42;
+  const topY=e.clientY-drag.offY;
+  const topU=42-Math.round((topY-br.top)/uh);
+  let u=Math.max(1,Math.min(43-d.h,topU-d.h+1));
+  let side=d.side;
+  if(d.side!=='full'){const left=e.clientX<br.left+br.width/2;const screenSide=left?'left':'right';side=S.view==='rear'?(screenSide==='left'?'right':'left'):screenSide}
+  const c=Object.assign({},d,{rack:bay.dataset.rack,u,side});
+  const v=validate(c,d.id);
+  const drop=document.createElement('div');
+  drop.className='drop '+(v.ok?'ok':'bad')+' '+sideClass(c,S.view);
+  drop.style.setProperty('--u',u);drop.style.setProperty('--h',d.h);
+  drop.innerHTML=`<span>${c.rack} ${uRange(c)}${v.ok?'':' ✕'}</span>`;
+  bay.querySelector('.devs').appendChild(drop);drag.drop=drop;
+  drag.target={c,v};
+}
+function startFloat(){
+  const f=drag.el.cloneNode(true);f.classList.remove('sel','enter','hit');f.className+=' dragfloat';
+  f.style.width=drag.w+'px';f.style.height=drag.h+'px';f.style.fontSize=getComputedStyle(drag.el).fontSize;f.style.bottom='auto';
+  document.body.appendChild(f);drag.float=f;
+  for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.add('dragging')}
+}
+function clearDrop(){if(drag&&drag.drop){drag.drop.remove();drag.drop=null}}
+function onUp(e){
+  if(!drag)return;
+  const dd=drag;drag=null;
+  try{dd.el.releasePointerCapture(dd.pid)}catch(_){}
+  if(!dd.moved){select(dd.id);return}
+  if(dd.drop)dd.drop.remove();
+  dd.float.remove();
+  for(const fc of ['front','rear']){const x=devEls.get(dd.id+'|'+fc);x&&x.classList.remove('dragging')}
+  if(dd.target){
+    const {c,v}=dd.target;const d=getDev(dd.id);
+    if(c.rack===d.rack&&c.u===d.u&&c.side===d.side)return;
+    if(v.ok){moveDev(dd.id,{rack:c.rack,u:c.u,side:c.side});S.sel=dd.id;renderRacks();renderPane()}
+    else{shake(dd.id);toast(v.msg,true)}
+  }
+}
+function nudge(dir,shift){
+  const d=S.sel&&getDev(S.sel);if(!d)return;
+  if(dir==='up')return moveDev(d.id,{u:d.u+1});
+  if(dir==='down')return moveDev(d.id,{u:d.u-1});
+  const screenLeft=dir==='left';
+  if(shift){
+    const want=S.view==='rear'?(screenLeft?'right':'left'):(screenLeft?'left':'right');
+    const order=['left','full','right'];let i=order.indexOf(d.side)+(want==='left'?-1:1);i=Math.max(0,Math.min(2,i));
+    return moveDev(d.id,{side:order[i]});
+  }
+  const targetRack=S.view==='front'?(screenLeft?'A':'B'):(screenLeft?'B':'A');
+  if(targetRack===d.rack){shake(d.id);toast(`已經在${screenLeft?'左':'右'}邊的 ${d.rack} 機櫃`,true);return}
+  const c=Object.assign({},d,{rack:targetRack});
+  if(validate(c,d.id).ok)return moveDev(d.id,{rack:targetRack});
+  const f=findFree(targetRack,d.h,d.face,d.side,d.u);
+  if(f==null){shake(d.id);toast(`${targetRack} 機櫃沒有 ${d.h}U 的空位`,true);return}
+  moveDev(d.id,{rack:targetRack,u:f});toast(`原位置被佔用，改放在 ${targetRack} ${uRange({u:f,h:d.h})}`);
+}
+
+/* ───────── 提示框與 toast ───────── */
+const tip=$('#tip');
+function hoverTip(e){
+  const el=e.target.closest&&e.target.closest('.room .dev');
+  if(!el){hideTip();return}
+  const d=getDev(el.dataset.id);if(!d){hideTip();return}
+  if(tip._id!==d.id+el.dataset.face){
+    const T=TYPES[d.type];
+    tip.innerHTML=`<b>${esc(d.name)}</b>${d.model?`<div>${esc(d.model)}</div>`:''}<div class="m">${d.rack} 機櫃 ${uRange(d)}・${FACE_LABEL[d.face]}${d.side!=='full'?'・'+SIDE_LABEL[d.side]:''}</div>${d.ip?`<div class="m">IP ${esc(d.ip)}</div>`:''}${POWERED.has(d.type)?`<div class="m">${STATUS[d.status].t}${d.w?`・約 ${d.w} W`:''}</div>`:''}${d.notes?`<div style="color:#c9d1cf;margin-top:2px">${esc(d.notes)}</div>`:''}<div class="m" style="margin-top:4px">${esc(T?.label||'')}・點選編輯，拖曳移動</div>`;
+    tip._id=d.id+el.dataset.face;
+  }
+  const x=Math.min(window.innerWidth-270,e.clientX+16),y=Math.min(window.innerHeight-tip.offsetHeight-10,e.clientY+14);
+  tip.style.left=x+'px';tip.style.top=y+'px';tip.classList.add('on');
+}
+function hideTip(){tip.classList.remove('on');tip._id=null}
+let toastT;
+function toast(msg,bad,act,fn){
+  const t=$('#toast');$('#toastMsg').textContent=msg;t.classList.toggle('bad',!!bad);
+  const b=$('#toastAct');if(act){b.hidden=false;b.textContent=act;b.onclick=()=>{fn();t.classList.remove('on')}}else b.hidden=true;
+  t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),act?5000:2600);
+}
+function confirmBox(title,body,okText,fn,danger){
+  const root=$('#modalRoot');
+  root.innerHTML=`<div class="modal"><div class="dialog sm" role="alertdialog" aria-modal="true"><div class="dhead"><h2>${esc(title)}</h2></div><div class="dbody">${body}</div><div class="dfoot"><button class="btn" data-x>取消</button><button class="btn ${danger?'danger':'primary'}" data-ok>${esc(okText)}</button></div></div></div>`;
+  root.querySelector('[data-x]').onclick=()=>root.innerHTML='';
+  root.querySelector('[data-ok]').onclick=()=>{root.innerHTML='';fn()};
+}
+
+/* ───────── 儲存：雲端 db，退而求其次存瀏覽器 ───────── */
+let db=null,ref=null,writing=false,dirty=false,saveT=null,readOnly=false,lastWritten=null,downloads=null;
+const LS='t1-rack-v1';
+function setSync(state,text){const s=$('#sync');s.className='sync '+state;s.querySelector('span').textContent=text}
+function payload(){return {schema:1,devices:S.devices,log:S.log.slice(0,80),rev:rev,by:clientId,updatedAt:new Date().toISOString()}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(payload()))}catch(_){}}
+function save(){
+  saveLocal();
+  if(!ref||readOnly){if(!ref)setSync('', '僅存於此瀏覽器');return}
+  dirty=true;setSync('busy','儲存中…');clearTimeout(saveT);saveT=setTimeout(flush,600);
+}
+async function flush(){
+  if(writing||!dirty||!ref)return;
+  writing=true;dirty=false;rev++;
+  const body=payload();lastWritten=body.rev+':'+clientId;
+  try{await ref.set(clone(body));remoteExists=true;setSync('ok','已儲存到雲端・所有人共用')}
+  catch(e){
+    if(e&&e.code==='invalid_argument'){readOnly=true;setSync('err','你只有檢視權限，變更不會儲存')}
+    else setSync('err','雲端儲存失敗，已暫存在此瀏覽器');
+  }
+  writing=false;if(dirty)flush();
+}
+function applyRemote(data){
+  if(!data||!Array.isArray(data.devices))return;
+  if(data.by===clientId&&(data.rev+':'+data.by)===lastWritten)return;
+  if(drag)return setTimeout(()=>applyRemote(data),400);
+  S.devices=clone(data.devices);S.log=clone(data.log||[]);rev=Math.max(rev,data.rev||0);
+  if(S.sel&&!getDev(S.sel))S.sel=null;
+  renderRacks();renderPane();saveLocal();
+}
+async function initStore(){
+  // 先用本機暫存（若有），讓畫面立即可用
+  try{const raw=localStorage.getItem(LS);if(raw){const d=JSON.parse(raw);if(Array.isArray(d.devices)&&d.devices.length){S.devices=d.devices;S.log=d.log||[]}}}catch(_){}
+  renderRacks({initial:true});renderPane();
+  let tries=0;
+  while(!(window.claude&&window.claude.use)&&tries<15){await new Promise(r=>setTimeout(r,200));tries++}
+  if(!(window.claude&&window.claude.use)){setSync('', '僅存於此瀏覽器');return}
+  try{downloads=await window.claude.use('downloads')}catch(_){}
+  try{db=await window.claude.use('db')}catch(_){db=null}
+  if(!db){setSync('', '僅存於此瀏覽器（未登入或無雲端權限）');return}
+  ref=db.doc('racks/t1');
+  setSync('busy','連線雲端中…');
+  ref.onSnapshot(snap=>{
+    if(snap.metadata&&snap.metadata.hasPendingWrites)return;
+    if(!snap.exists){remoteExists=false;setSync('', '雲端尚無資料，第一次編輯後會自動儲存');return}
+    remoteExists=true;applyRemote(snap.data());
+    if(!writing&&!dirty)setSync('ok','已同步雲端・所有人共用');
+  },err=>{setSync('err','雲端連線中斷，變更暫存在此瀏覽器');ref=null});
+}
+
+/* ───────── 匯出／匯入 ───────── */
+function exportJSON(){
+  const data={app:'T1 機房機櫃',schema:1,exportedAt:new Date().toISOString(),devices:S.devices,log:S.log};
+  const json=JSON.stringify(data,null,2);
+  const d=new Date();const fn=`T1機櫃_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
+  if(downloads){downloads.save({filename:fn,data:json}).then(()=>toast('已匯出 '+fn)).catch(e=>{if(e&&e.code==='declined')return;showJSON(json)});return}
+  showJSON(json);
+}
+function showJSON(json){
+  const root=$('#modalRoot');
+  root.innerHTML=`<div class="modal"><div class="dialog"><div class="dhead"><h2>匯出 JSON</h2><button class="btn ghost" data-x aria-label="關閉">✕</button></div><div class="dbody"><div class="sub" style="margin-bottom:8px">此環境無法直接下載檔案。請複製下方內容，另存為 .json 檔備份。</div><textarea class="json" id="jsonOut" readonly>${esc(json)}</textarea></div><div class="dfoot"><button class="btn" data-x>關閉</button><button class="btn primary" id="cpy">複製</button></div></div></div>`;
+  root.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>root.innerHTML='');
+  root.querySelector('#cpy').onclick=()=>{const ta=root.querySelector('#jsonOut');navigator.clipboard.writeText(ta.value).then(()=>toast('已複製到剪貼簿')).catch(()=>{ta.select();toast('已選取全文，請按 Ctrl+C 複製')})};
+}
+function importData(text){
+  let data;try{data=JSON.parse(text)}catch(_){toast('檔案不是有效的 JSON',true);return}
+  const list=Array.isArray(data)?data:data.devices;
+  if(!Array.isArray(list)){toast('找不到設備清單（devices）',true);return}
+  const clean=list.filter(x=>x&&TYPES[x.type]&&(x.rack==='A'||x.rack==='B')&&x.u>=1&&x.h>=1).map((x,i)=>Object.assign({id:x.id||('i'+i+Date.now().toString(36)),side:'full',face:TYPES[x.type].face,reversed:false,status:'online',ip:'',sn:'',notes:'',model:'',variant:Object.keys(TYPES[x.type].variants)[0],w:defaultW(x.type,x.h)},x));
+  confirmBox('匯入設備清單',`<p style="margin:0">檔案內有 <b>${clean.length}</b> 筆有效設備${list.length!==clean.length?`（略過 ${list.length-clean.length} 筆格式不符）`:''}。匯入會取代目前兩座機櫃的內容，之後仍可按「復原」還原。</p>`,'取代並匯入',()=>{
+    snapshot();S.devices=clean;S.sel=null;commit(`匯入 ${clean.length} 筆設備`);toast(`已匯入 ${clean.length} 筆設備`);
+  });
+}
+
+/* ───────── 事件 ───────── */
+function bind(){
+  const room=$('#room');
+  room.addEventListener('pointerdown',onDown);
+  window.addEventListener('pointermove',onMove);
+  window.addEventListener('pointerup',onUp);
+  window.addEventListener('pointercancel',()=>{if(drag){clearDrop();drag.float&&drag.float.remove();for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.remove('dragging')}drag=null}});
+  room.addEventListener('pointerleave',hideTip);
+  room.addEventListener('click',e=>{
+    const lb=e.target.closest('.lb');if(lb){select(lb.dataset.id);return}
+    const slot=e.target.closest('.slot');if(slot){const bay=slot.closest('.bay');openAdd({rack:bay.dataset.rack,u:+slot.dataset.u});return}
+  });
+  room.addEventListener('keydown',e=>{if(e.key==='Enter'){const el=e.target.closest('.dev');el&&select(el.dataset.id)}});
+  $('#vFront').onclick=()=>setView('front');$('#vRear').onclick=()=>setView('rear');
+  $('#addBtn').onclick=()=>openAdd({rack:(S.sel&&getDev(S.sel)?.rack)||'A'});
+  $('#undoBtn').onclick=undo;
+  let qT;$('#q').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeout(()=>{S.q=e.target.value.trim();renderRacks();if(S.tab==='list')renderPane()},120)});
+  $('#tLabels').onclick=e=>{S.labels=!S.labels;e.currentTarget.setAttribute('aria-pressed',S.labels);fit();pref()};
+  $('#tDoor').onclick=e=>{S.door=!S.door;e.currentTarget.setAttribute('aria-pressed',S.door);$('#room').classList.toggle('doors-closed',S.door)};
+  $('#tHeat').onclick=e=>{S.heat=!S.heat;e.currentTarget.setAttribute('aria-pressed',S.heat);$('#room').classList.toggle('heat',S.heat)};
+  $('#zoomR').oninput=e=>{S.zoom=+e.target.value;$('#zoomAuto').setAttribute('aria-pressed','false');fit()};
+  $('#zoomAuto').onclick=()=>{S.zoom=null;$('#zoomAuto').setAttribute('aria-pressed','true');fit()};
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+  $('#expBtn').onclick=exportJSON;
+  $('#impBtn').onclick=()=>{
+    const root=$('#modalRoot');
+    root.innerHTML=`<div class="modal"><div class="dialog"><div class="dhead"><h2>匯入 JSON</h2><button class="btn ghost" data-x aria-label="關閉">✕</button></div><div class="dbody"><div class="sub" style="margin-bottom:8px">選擇之前匯出的 .json 檔，或把內容貼在下方。</div><button class="btn" id="pick">選擇檔案</button><textarea class="json" id="jsonIn" style="margin-top:10px;min-height:180px" placeholder='{"devices":[...]}'></textarea>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="sub">或</span><button class="btn danger" id="resetSeed">重設為原始盤點清單</button></div></div>
+      <div class="dfoot"><button class="btn" data-x>取消</button><button class="btn primary" id="doImp">匯入貼上的內容</button></div></div></div>`;
+    root.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>root.innerHTML='');
+    root.querySelector('#pick').onclick=()=>$('#impFile').click();
+    root.querySelector('#doImp').onclick=()=>{const v=root.querySelector('#jsonIn').value;root.innerHTML='';importData(v)};
+    root.querySelector('#resetSeed').onclick=()=>confirmBox('重設為原始盤點','<p style="margin:0">兩座機櫃會回到 2026/10/16 現場盤點的 45 筆設備，目前的調整會被取代（可按「復原」還原）。</p>','重設',()=>{snapshot();S.devices=seedDevices();S.sel=null;commit('重設為原始盤點清單');toast('已重設為原始盤點')},true);
+  };
+  $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{$('#modalRoot').innerHTML='';importData(rd.result)};rd.readAsText(f);e.target.value=''};
+  document.addEventListener('keydown',e=>{
+    if(e.target.matches('input,textarea,select')||$('#modalRoot').children.length)return;
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return}
+    if(e.key==='v'||e.key==='V'){setView(S.view==='front'?'rear':'front');return}
+    if(e.key==='Escape'){select(null);return}
+    if(!S.sel)return;
+    const d=getDev(S.sel);
+    const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
+    if(map[e.key]){e.preventDefault();nudge(map[e.key],e.shiftKey);return}
+    if(e.key==='f'||e.key==='F'){const o=['front','rear','both'];moveDev(d.id,{face:o[(o.indexOf(d.face)+1)%3]});return}
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();removeDev(d.id)}
+  });
+  window.addEventListener('resize',()=>{clearTimeout(window._ft);window._ft=setTimeout(fit,80)});
+  // 類型篩選
+  const used=[...new Set(S.devices.map(d=>d.type))];
+  $('#typeChips').innerHTML=Object.keys(TYPES).filter(t=>['server','storage','switch','firewall','patch','pdu'].includes(t)).map(t=>`<button class="chip" data-type="${t}" aria-pressed="false"><i class="dot" style="background:${TYPES[t].color}"></i>${TYPES[t].label}</button>`).join('');
+  $('#typeChips').querySelectorAll('[data-type]').forEach(b=>b.onclick=()=>{S.typeFilter=S.typeFilter===b.dataset.type?null:b.dataset.type;$('#typeChips').querySelectorAll('[data-type]').forEach(x=>x.setAttribute('aria-pressed',x.dataset.type===S.typeFilter));renderRacks();if(S.tab==='list')renderPane()});
+}
+function pref(){try{localStorage.setItem('t1-rack-pref',JSON.stringify({labels:S.labels}))}catch(_){}}
+function loadPref(){try{const p=JSON.parse(localStorage.getItem('t1-rack-pref')||'{}');if(p.labels===false){S.labels=false;$('#tLabels').setAttribute('aria-pressed','false')}}catch(_){}}
+
+/* ───────── 開機 ───────── */
+buildRooms();loadPref();fit();bind();
+initStore();
+// 開機動畫：指示燈由上而下依序亮起
+requestAnimationFrame(()=>{document.querySelectorAll('.room .dev').forEach(el=>el.classList.add('boot'));setTimeout(()=>document.querySelectorAll('.room .dev.boot').forEach(el=>el.classList.remove('boot')),4000)});
+window.claude?.hot?.snapshot?.(()=>({view:S.view,sel:S.sel}));
+})();
+</script>
+
+</body>
+</html>
