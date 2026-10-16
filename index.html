@@ -137,6 +137,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 .stage.is3d .floor{display:none}
 .scene.mode3d{height:100%;min-width:0;align-items:center;perspective:2400px;perspective-origin:50% 45%;padding:0;overflow:hidden;cursor:grab;touch-action:none;user-select:none}
 .scene.mode3d.orbiting{cursor:grabbing}
+/* 轉動／縮放中：暫停其餘動畫，避免每一格都要重繪陰影與重新合成 */
+.scene.moving *,.scene.moving *::before,.scene.moving *::after{animation-play-state:paused!important}
+.is3d-ui .chip{backdrop-filter:none;background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .scene.mode3d .room{transition:none}
 .scene.mode3d .room.anim{transition:transform .9s cubic-bezier(.6,.05,.3,1)}
 .scene.mode3d .block,.scene.mode3d .rackwrap,.scene.mode3d .cab{transform-style:preserve-3d}
@@ -308,12 +311,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 .led.a{background:#ffb627;box-shadow:0 0 .12em #ffb627,0 0 .3em rgba(255,182,39,.6)}
 .led.b{background:#3ea7ff;box-shadow:0 0 .12em #3ea7ff,0 0 .3em rgba(62,167,255,.6)}
 .led.r{background:#ff3b3b;box-shadow:0 0 .12em #ff3b3b,0 0 .3em rgba(255,59,59,.6)}
-.led.blink{animation:blink var(--sp,1.3s) steps(1,end) infinite;animation-delay:var(--d,0s)}
-.led.flick{animation:flick var(--sp,.7s) linear infinite;animation-delay:var(--d,0s)}
+.led.dim{opacity:.18}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
 @keyframes flick{0%,100%{opacity:1}10%{opacity:.2}20%{opacity:1}55%{opacity:.35}62%{opacity:1}}
-.st-off .led{background:#26302a!important;box-shadow:none!important;animation:none!important}
-.st-maint .led{background:#ffb627!important;box-shadow:0 0 .15em #ffb627!important;animation:blink .9s steps(1,end) infinite!important}
+.st-off .led{background:#26302a!important;box-shadow:none!important;animation:none!important;opacity:1!important}
+.st-maint .led{background:#ffb627!important;box-shadow:0 0 .15em #ffb627!important}
 .st-off .screen{background:#050607!important}
 .st-off .screen *{visibility:hidden}
 .st-off .fanblade{animation-play-state:paused!important}
@@ -980,7 +982,7 @@ function matches(d){
   const q=S.q.toLowerCase();
   return [d.name,d.model,d.ip,d.sn,d.notes,TYPES[d.type]?.label].some(x=>String(x||'').toLowerCase().includes(q));
 }
-function renderRacks(opts={}){
+function renderRacks(opts={}){ledEls=null;
   const seen=new Set();const relSet=S.sel?relatedIds(S.sel):null;
   const filtering=!!(S.q||S.typeFilter);
   for(const d of S.devices){
@@ -1051,8 +1053,8 @@ function fit(){
   }
   // 3D 縮放直接改變繪製尺寸（不用 transform scale），放大後文字與模型仍保持清晰
   if(S.mode==='3d')uh=Math.max(4,Math.min(160,uh*cam.kr));
-  document.documentElement.style.setProperty('--uh',uh+'px');
-  document.documentElement.style.setProperty('--uns',uh<14?'.8':'1');
+  // 只設在機櫃場景上，重繪時不必連右側面板一起重新計算樣式
+  const sc=$('#scene');sc.style.setProperty('--uh',uh+'px');sc.style.setProperty('--uns',uh<14?'.8':'1');
 }
 
 /* ───────── 碰撞與移動 ───────── */
@@ -1138,13 +1140,23 @@ function setView(v){
 
 /* ───────── 3D 視角 ───────── */
 const cam={yaw:-30,pitch:-14,k:.68,kr:.68,px:0,py:0};
-let zoomT=0;
-/* 縮放手勢進行中先用 GPU 縮放（流暢），停手 180ms 後再以新尺寸重新繪製（清晰） */
-function setZoomK(k){
-  cam.k=Math.max(.2,Math.min(5,k));applyCam();
-  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,180);
+let zoomT=0,camRaf=0,moveT=0;
+/* 滾輪、拖曳事件可能一格畫面內來好幾次，只記下目標值，每格畫面最多套用一次 */
+function queueCam(){if(!camRaf)camRaf=requestAnimationFrame(()=>{camRaf=0;applyCam()})}
+/* 手勢進行中標記 moving：燈號與其他動畫暫停，讓每格只需重新合成 */
+function markMoving(){
+  const sc=$('#scene');if(!sc.classList.contains('moving'))sc.classList.add('moving');
+  clearTimeout(moveT);moveT=setTimeout(()=>{if(!orb)sc.classList.remove('moving')},320);
 }
-function commitZoom(){if(cam.kr===cam.k)return;cam.kr=cam.k;fit();applyCam()}
+/* 縮放手勢進行中先用 GPU 縮放（流暢），停手 300ms 後再以新尺寸重新繪製一次（清晰） */
+function setZoomK(k){
+  cam.k=Math.max(.2,Math.min(5,k));queueCam();markMoving();
+  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,300);
+}
+function commitZoom(){
+  if(orb&&orb.pinch){zoomT=setTimeout(commitZoom,300);return}
+  if(Math.abs(cam.kr-cam.k)<.002)return;cam.kr=cam.k;fit();applyCam();
+}
 let orb=null,orbMoved=false;const ptrs=new Map();
 function applyCam(anim){
   const r=$('#room');
@@ -1191,16 +1203,30 @@ function orbitMove(e){
   if(!orb.moved){if(Math.hypot(dx,dy)<4)return;orb.moved=true;orbMoved=true;$('#scene').classList.add('orbiting');hideTip()}
   if(orb.pan){cam.px=orb.px+dx;cam.py=orb.py+dy}
   else{cam.yaw=orb.yaw+dx*.35;cam.pitch=Math.max(-80,Math.min(60,orb.pitch-dy*.3))}
-  applyCam();
+  markMoving();queueCam();
 }
 function orbitUp(e){
   ptrs.delete(e.pointerId);
   if(!orb)return;
-  const o=orb;orb=null;$('#scene').classList.remove('orbiting');
+  const o=orb;orb=null;$('#scene').classList.remove('orbiting');if(o.moved)markMoving();
   if(!o.moved&&o.devId)select(o.devId);
   else if(!o.moved&&o.slot&&e.button===0)openAdd(o.slot);
   setTimeout(()=>{orbMoved=false},0);
 }
+/* 燈號閃爍：以約 9 次／秒的輕量計時切換 .dim，不替每顆燈建立獨立合成圖層 */
+var ledEls=null;
+function ledTick(){
+  if(document.hidden||S.mode==='topo'||$('#scene').classList.contains('moving'))return;
+  if(!ledEls||!ledEls.length||!ledEls[0].isConnected)ledEls=[...document.querySelectorAll('.room .led.blink,.room .led.flick')].map(el=>{
+    const cs=el.style,sp=parseFloat(cs.getPropertyValue('--sp'))||(el.classList.contains('blink')?1.3:.7),d=parseFloat(cs.getPropertyValue('--d'))||0;
+    return {el,blink:el.classList.contains('blink'),sp:sp*1000,d:d*1000,dim:el.classList.contains('dim')}});
+  const t=performance.now();
+  for(const o of ledEls){
+    const dim=o.blink?((t-o.d)%o.sp+o.sp)%o.sp>=o.sp/2:Math.random()<.3;
+    if(dim!==o.dim){o.dim=dim;o.el.classList.toggle('dim',dim)}
+  }
+}
+setInterval(ledTick,110);
 function spinLoop(){if(S.autorot&&!orb&&S.mode==='3d'){cam.yaw+=.18;applyCam()}requestAnimationFrame(spinLoop)}
 
 /* ───────── 設備完整資料 ───────── */
