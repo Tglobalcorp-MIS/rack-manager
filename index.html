@@ -928,12 +928,12 @@ function fit(){
     const uhW=(st.width-40-2*lw)/27.6;
     const uhH=(st.height-130)/46.6;
     uh=narrow&&S.mode!=='3d'?uhW:Math.min(uhW,uhH);
-    if(S.mode==='3d')uh*=.92;
     uh=Math.max(9,Math.min(34,Math.floor(uh*2)/2));
     $('#zoomR').value=Math.round(uh);
   }
+  // 3D 縮放直接改變繪製尺寸（不用 transform scale），放大後文字與模型仍保持清晰
+  if(S.mode==='3d')uh=Math.max(4,Math.min(160,uh*cam.k));
   document.documentElement.style.setProperty('--uh',uh+'px');
-  document.querySelectorAll('.post .un>span').forEach(()=>{});
   document.documentElement.style.setProperty('--uns',uh<14?'.8':'1');
 }
 
@@ -1018,13 +1018,15 @@ function setView(v){
 }
 
 /* ───────── 3D 視角 ───────── */
-const cam={yaw:-30,pitch:-14,zoom:.74,px:0,py:0};
+const cam={yaw:-30,pitch:-14,k:.68,px:0,py:0};
+let zoomRaf=0;
+function setZoomK(k){cam.k=Math.max(.2,Math.min(5,k));if(!zoomRaf)zoomRaf=requestAnimationFrame(()=>{zoomRaf=0;fit()})}
 let orb=null,orbMoved=false;const ptrs=new Map();
 function applyCam(anim){
   const r=$('#room');
   if(S.mode!=='3d'){r.style.transform='';return}
   r.classList.toggle('anim',!!anim);
-  r.style.transform=`translate3d(${cam.px}px,${cam.py}px,0) scale(${cam.zoom}) rotateX(${cam.pitch}deg) rotateY(${cam.yaw}deg)`;
+  r.style.transform=`translate3d(${cam.px}px,${cam.py}px,0) rotateX(${cam.pitch}deg) rotateY(${cam.yaw}deg)`;
   const y=((cam.yaw%360)+360)%360;const rear=y>90&&y<270;
   if(rear!==(S.view==='rear')){setView._fromCam=true;setView(rear?'rear':'front');setView._fromCam=false}
 }
@@ -1040,7 +1042,7 @@ function setMode(m){
 }
 function orbitDown(e){
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(ptrs.size===2){const [a,b]=[...ptrs.values()];orb={pinch:Math.hypot(a.x-b.x,a.y-b.y),zoom:cam.zoom,moved:true};orbMoved=true;return}
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];orb={pinch:Math.hypot(a.x-b.x,a.y-b.y),k:cam.k,moved:true};orbMoved=true;return}
   const el=e.target.closest('.dev');
   orb={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch,px:cam.px,py:cam.py,pan:e.button===2||e.shiftKey||e.button===1,moved:false,devId:el&&el.dataset.id,pid:e.pointerId};
   orbMoved=false;
@@ -1048,7 +1050,7 @@ function orbitDown(e){
 }
 function orbitMove(e){
   if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
-  if(orb&&orb.pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()];cam.zoom=Math.max(.3,Math.min(3,orb.zoom*Math.hypot(a.x-b.x,a.y-b.y)/orb.pinch));applyCam();return}
+  if(orb&&orb.pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()];setZoomK(orb.k*Math.hypot(a.x-b.x,a.y-b.y)/orb.pinch);return}
   if(!orb||orb.pinch)return;
   const dx=e.clientX-orb.x,dy=e.clientY-orb.y;
   if(!orb.moved){if(Math.hypot(dx,dy)<4)return;orb.moved=true;orbMoved=true;$('#scene').classList.add('orbiting');hideTip()}
@@ -1441,10 +1443,10 @@ function bind(){
   const room=$('#room');
   $('#scene').addEventListener('pointerdown',onDown);
   $('#scene').addEventListener('contextmenu',e=>{if(S.mode==='3d')e.preventDefault()});
-  $('#scene').addEventListener('wheel',e=>{if(S.mode!=='3d')return;e.preventDefault();cam.zoom=Math.max(.3,Math.min(3,cam.zoom*Math.exp(-e.deltaY*.0012)));applyCam()},{passive:false});
+  $('#scene').addEventListener('wheel',e=>{if(S.mode!=='3d')return;e.preventDefault();setZoomK(cam.k*Math.exp(-e.deltaY*.0012))},{passive:false});
   $('#m2d').onclick=()=>setMode('2d');$('#m3d').onclick=()=>setMode('3d');
   $('#tSpin').onclick=e=>{S.autorot=!S.autorot;e.currentTarget.setAttribute('aria-pressed',S.autorot)};
-  $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.zoom=.74;cam.px=0;cam.py=0;applyCam(true)};
+  $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.k=.68;cam.px=0;cam.py=0;applyCam(true);fit()};
   window.addEventListener('pointermove',onMove);
   window.addEventListener('pointerup',onUp);
   window.addEventListener('pointercancel',()=>{if(drag){clearDrop();drag.float&&drag.float.remove();for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.remove('dragging')}drag=null}});
