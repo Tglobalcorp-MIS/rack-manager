@@ -74,7 +74,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 /* ── 主區 ── */
 .main{display:grid;grid-template-columns:1fr 360px;min-height:0}
-.stage{position:relative;min-width:0;min-height:0;overflow:auto;background:linear-gradient(180deg,var(--wall-1),var(--wall-2) 70%,var(--floor-2) 70%,var(--floor-1));}
+.stage{position:relative;min-width:0;min-height:0;overflow:auto;overflow-anchor:none;scrollbar-gutter:stable;background:linear-gradient(180deg,var(--wall-1),var(--wall-2) 70%,var(--floor-2) 70%,var(--floor-1));}
 .stage-tools{position:sticky;top:0;left:0;z-index:5;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;pointer-events:none}
 .stage-tools>*{pointer-events:auto}
 .chip{border:1px solid var(--line);background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(6px);padding:4px 10px;border-radius:999px;font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
@@ -137,8 +137,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .stage.is3d .floor{display:none}
 .scene.mode3d{height:100%;min-width:0;align-items:center;perspective:2400px;perspective-origin:50% 45%;padding:0;overflow:hidden;cursor:grab;touch-action:none;user-select:none}
 .scene.mode3d.orbiting{cursor:grabbing}
-/* 轉動／縮放中：暫停其餘動畫，避免每一格都要重繪陰影與重新合成 */
-.scene.moving *,.scene.moving *::before,.scene.moving *::after{animation-play-state:paused!important}
+.scene.panning{cursor:grabbing}
 .is3d-ui .chip{backdrop-filter:none}
 .is3d-ui .chip:not([aria-pressed="true"]){background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .scene.mode3d .room{transition:none}
@@ -513,6 +512,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:700}
 .pane{flex:1;overflow:auto;padding:16px;min-height:0}
 .pane h2{font-family:var(--f-disp);font-size:20px;letter-spacing:.02em;margin:0 0 2px;line-height:1.15;text-wrap:balance}
+.todo{display:flex;flex-direction:column;gap:4px}
+.todo-i{display:grid;grid-template-columns:8px minmax(0,1fr) auto;grid-template-areas:"d n e" "d u e";column-gap:8px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px;color:var(--ink);font:inherit;cursor:pointer;transition:border-color .15s,transform .15s}
+.todo-i:hover{border-color:var(--muted);transform:translateX(2px)}
+.todo-i i{grid-area:d;width:8px;height:8px;border-radius:50%;background:var(--warn)}.todo-i.lv0 i{background:var(--bad)}
+.todo-i b{grid-area:n;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.todo-i span{grid-area:u;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.todo-i em{grid-area:e;font-style:normal;font-size:12px;color:var(--warn)}.todo-i.lv0 em{color:var(--bad)}
 .pane h3{font-size:12px;letter-spacing:.08em;color:var(--muted);margin:18px 0 8px;font-weight:700}
 .sub{color:var(--muted);font-size:12px}
 .preview{border-radius:8px;background:radial-gradient(120% 120% at 50% 0,#22282b,#0c0e0f);padding:14px 10px;display:flex;flex-direction:column;align-items:center;gap:6px;margin:10px 0 6px}
@@ -649,7 +655,7 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
         <button class="chip only3d" id="tSpin" aria-pressed="false">自動旋轉</button>
         <button class="chip only3d" id="tReset">重設視角</button>
         <span class="hint3d only3d">拖曳旋轉・右鍵或 Shift 拖曳平移・滾輪縮放</span>
-        <span class="zoom"><label for="zoomR">縮放</label><input id="zoomR" type="range" min="10" max="40" step="1" value="20"><button class="chip" id="zoomAuto" aria-pressed="true" style="padding:1px 8px">自動</button></span>
+        <span class="zoom"><label for="zoomR">縮放</label><input id="zoomR" type="range" min="8" max="90" step="1" value="20"><button class="chip" id="zoomAuto" aria-pressed="true" style="padding:1px 8px">自動</button></span>
         <span id="typeChips" style="display:contents"></span>
       </div>
       <div class="topo" id="topo" hidden>
@@ -687,6 +693,7 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
       <div class="pane" id="pane"></div>
       <div class="datafoot">
         <span class="sync" id="sync"><i></i><span>讀取中…</span></span>
+        <button class="btn" id="csvBtn" title="匯出設備清單（CSV，可直接用 Excel 開啟）">匯出 Excel</button>
         <button class="btn" id="expBtn">匯出 JSON</button>
         <button class="btn" id="impBtn">匯入</button>
         <input type="file" id="impFile" accept=".json,application/json" hidden>
@@ -1077,7 +1084,7 @@ function fit(){
     $('#zoomR').value=Math.round(uh);
   }
   // 3D 縮放直接改變繪製尺寸（不用 transform scale），放大後文字與模型仍保持清晰
-  if(S.mode==='3d')uh=Math.max(4,Math.min(160,uh*cam.kr));
+  if(S.mode==='3d'){fit._base=uh;uh=Math.max(4,Math.min(160,uh*cam.kr))}
   // 只設在機櫃場景上，重繪時不必連右側面板一起重新計算樣式
   const sc=$('#scene');sc.style.setProperty('--uh',uh+'px');sc.style.setProperty('--uns',uh<14?'.8':'1');
 }
@@ -1164,27 +1171,33 @@ function setView(v){
 }
 
 /* ───────── 3D 視角 ───────── */
-const cam={yaw:-30,pitch:-14,k:.68,kr:.68,px:0,py:0};
+/* 3D 以 SS 倍解析度繪製、再用 GPU 縮小顯示（超取樣）：放大 SS 倍以內、縮小到約 1/3 都不必重新排版，快速縮放不會停頓 */
+const SS=1.6;
+const cam={yaw:-30,pitch:-14,k:.68,kr:.68*SS,px:0,py:0};
 /* 視角最低只到略高於水平，不會鑽到地板下方；接近水平時地板淡出，避免擋住機櫃 */
 const PITCH_MAX=-1;
 let zoomT=0,camRaf=0,moveT=0;
 /* 滾輪、拖曳事件可能一格畫面內來好幾次，只記下目標值，每格畫面最多套用一次 */
 function queueCam(){if(!camRaf)camRaf=requestAnimationFrame(()=>{camRaf=0;applyCam()})}
-/* 手勢進行中標記 moving：燈號與其他動畫暫停，讓每格只需重新合成 */
+/* 手勢進行中只設一個 JS 旗標（燈號計時器暫停）。不要在 #scene 上切換 class：
+   若有「.scene.xxx *」這類規則，每次切換都會重算整座機櫃五千多個元素的樣式，手勢一開始和結束就會頓一下 */
+let camMoving=false;
 function markMoving(){
-  const sc=$('#scene');if(!sc.classList.contains('moving'))sc.classList.add('moving');
-  clearTimeout(moveT);moveT=setTimeout(()=>{if(!orb){sc.classList.remove('moving');syncView()}},320);
+  camMoving=true;
+  clearTimeout(moveT);moveT=setTimeout(()=>{if(!orb){camMoving=false;syncView()}},320);
 }
-/* 縮放手勢進行中先用 GPU 縮放（流暢），停手 300ms 後再以新尺寸重新繪製一次（清晰） */
+/* 縮放手勢進行中只改 GPU 縮放；只有超出超取樣範圍時，停手後才重新繪製一次 */
 function setZoomK(k){
   cam.k=Math.max(.2,Math.min(5,k));queueCam();markMoving();
-  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,420);
+  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,650);
 }
 function commitZoom(){
   if(orb&&orb.pinch){zoomT=setTimeout(commitZoom,300);return}
-  // 縮小時 GPU 縮放本來就清晰，只有縮小很多才重繪；放大超過 6% 才重繪成清晰版本，慢慢縮放時就不會每一格都重排
-  const ratio=cam.k/cam.kr;if(ratio<1.06&&ratio>.6)return;
-  cam.kr=cam.k;fit();applyCam();
+  const maxKr=160/(fit._base||20);const want=Math.min(cam.k*SS,maxKr);
+  const ratio=cam.k/cam.kr;
+  if(ratio<=1.001&&ratio>=.32)return;          // 仍在超取樣範圍內：畫面本來就清晰
+  if(ratio>1&&cam.kr>=maxKr-1e-6)return;        // 已是最高解析度
+  cam.kr=want;fit();applyCam();
 }
 let orb=null,orbMoved=false;const ptrs=new Map();
 function applyCam(anim){
@@ -1199,7 +1212,7 @@ function applyCam(anim){
   const y=((cam.yaw%360)+360)%360;
   if(!camRear&&y>100&&y<260)camRear=true;else if(camRear&&(y<80||y>280))camRear=false;
   $('#vFront').setAttribute('aria-pressed',!camRear);$('#vRear').setAttribute('aria-pressed',camRear);
-  if(!$('#scene').classList.contains('moving'))syncView();
+  if(!camMoving)syncView();
 }
 let camRear=false;
 function syncView(){if(S.mode==='3d'&&(S.view==='rear')!==camRear){setView._fromCam=true;setView(camRear?'rear':'front');setView._fromCam=false}}
@@ -1253,7 +1266,7 @@ function orbitUp(e){
 /* 燈號閃爍：以約 9 次／秒的輕量計時切換 .dim，不替每顆燈建立獨立合成圖層 */
 var ledEls=null;
 function ledTick(){
-  if(document.hidden||S.mode==='topo'||$('#scene').classList.contains('moving'))return;
+  if(document.hidden||S.mode==='topo'||camMoving)return;
   if(!ledEls||!ledEls.length||!ledEls[0].isConnected)ledEls=[...document.querySelectorAll('.room .led.blink,.room .led.flick')].map(el=>{
     const cs=el.style,sp=parseFloat(cs.getPropertyValue('--sp'))||(el.classList.contains('blink')?1.3:.7),d=parseFloat(cs.getPropertyValue('--d'))||0;
     return {el,blink:el.classList.contains('blink'),sp:sp*1000,d:d*1000,dim:el.classList.contains('dim')}});
@@ -1573,11 +1586,13 @@ function renderInfo(p){
   if(!d){
     const total=S.devices.length;const free=84-usedU('A').size-usedU('B').size;
     p.innerHTML=`<h2>T1 機房</h2><div class="sub">共 ${total} 筆設備，剩餘 ${free}U 空位</div>
-    <div class="hint" style="margin-top:14px">點一下機櫃裡的設備即可檢視與編輯。2D 模式下按住設備拖曳可上下移動或拖到另一座機櫃；3D 模式下拖曳用來轉動視角，移動設備請用右側的位置控制或方向鍵。點空的 U 位可在該位置新增設備。</div>
+    ${todoHTML()}
+    <div class="hint" style="margin-top:14px">點一下機櫃裡的設備即可檢視與編輯。2D 模式下按住設備拖曳可上下移動或拖到另一座機櫃，滾輪以滑鼠位置縮放，拖曳空白處可平移畫面；3D 模式下拖曳用來轉動視角，移動設備請用右側的位置控制或方向鍵。點空的 U 位可在該位置新增設備。</div>
     <h3>鍵盤快速鍵</h3>
     <div class="keys-help"><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>上下移動 1U</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>移到左邊／右邊的機櫃</span><span><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd></span><span>半寬設備靠左／靠右</span><span><kbd>F</kbd></span><span>切換安裝面（前側／後側／全深）</span><span><kbd>V</kbd></span><span>翻轉檢視正面／背面</span><span>3D 滑鼠</span><span>拖曳旋轉、右鍵或 Shift 拖曳平移、滾輪縮放；未選取設備時方向鍵也能轉動視角</span><span><kbd>Delete</kbd></span><span>刪除選取的設備</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>復原</span><span><kbd>Esc</kbd></span><span>取消選取</span></div>
     <h3>圖例</h3>
     <div class="keys-help"><span><span class="pill"><i style="background:var(--ok)"></i>運作中</span></span><span>狀態燈綠色呼吸、存取燈閃爍</span><span><span class="pill"><i style="background:var(--warn)"></i>維護中</span></span><span>狀態燈黃色閃爍、風扇加速</span><span><span class="pill"><i style="background:var(--bad)"></i>告警</span></span><span>狀態燈紅色快閃、風扇全速</span><span><span class="pill"><i style="background:var(--muted)"></i>關機</span></span><span>指示燈熄滅、風扇停止</span><span><span class="pill" style="border-style:dashed">斜紋</span></span><span>另一面的設備（例如從背面看到前側設備的背板）</span></div>`;
+    p.querySelectorAll('.todo-i').forEach(b=>b.onclick=()=>select(b.dataset.id,true));
     return;
   }
   const T=TYPES[d.type]||{label:d.type,variants:{}};
@@ -1740,9 +1755,39 @@ function openAdd(pre={}){
 
 /* ───────── 拖曳 ───────── */
 let drag=null;
+/* ───────── 2D 縮放（以滑鼠位置為中心） ─────────
+   手勢進行中只對 #scene 做 GPU 縮放；停手 300ms 後才以新尺寸重新排版一次，並調整捲動位置讓滑鼠下的內容維持不動 */
+let pan=null;const z2={on:false,s:1,tx:0,ty:0,t:0,mx:0,my:0};
+function zoom2d(e){
+  e.preventDefault();
+  const sc=$('#scene');const cur=parseFloat(sc.style.getPropertyValue('--uh'))||20;
+  if(!z2.on){const r=sc.getBoundingClientRect();Object.assign(z2,{on:true,s:1,tx:0,ty:0,ox:r.left,oy:r.top,base:cur});sc.style.transformOrigin='0 0';sc.style.willChange='transform'}
+  // 捲軸出現或消失會讓場景位移，每次都重新取得場景未縮放時的原點
+  {const r=sc.getBoundingClientRect();z2.ox=r.left-z2.tx;z2.oy=r.top-z2.ty}
+  let f=Math.exp(-e.deltaY*.0015);const ns=Math.max(8/z2.base,Math.min(90/z2.base,z2.s*f));f=ns/z2.s;
+  z2.tx=(e.clientX-z2.ox)*(1-f)+f*z2.tx;z2.ty=(e.clientY-z2.oy)*(1-f)+f*z2.ty;z2.s=ns;z2.mx=e.clientX;z2.my=e.clientY;
+  if(!z2.raf)z2.raf=requestAnimationFrame(()=>{z2.raf=0;if(z2.on)sc.style.transform=`translate(${z2.tx}px,${z2.ty}px) scale(${z2.s})`});
+  markMoving();clearTimeout(z2.t);z2.t=setTimeout(commit2d,300);
+}
+function commit2d(){
+  if(!z2.on)return;const sc=$('#scene'),st=$('#stage');
+  if(S.mode!=='2d'){z2.on=false;sc.style.transform='';sc.style.willChange='';return}
+  const cabs=[...sc.querySelectorAll('.cab')].filter(c=>c.getBoundingClientRect().width>0);
+  const near=(rs)=>{let b=null,bd=1e9;rs.forEach((r,i)=>{const d=Math.hypot(r.left+r.width/2-z2.mx,r.top+r.height/2-z2.my);if(d<bd){bd=d;b=i}});return b};
+  const rb=cabs.map(c=>c.getBoundingClientRect());const i=near(rb);const a=rb[i];
+  const fx=(z2.mx-a.left)/a.width,fy=(z2.my-a.top)/a.height;
+  z2.on=false;if(z2.raf){cancelAnimationFrame(z2.raf);z2.raf=0}
+  S.zoom=Math.round(z2.base*z2.s*2)/2;$('#zoomR').value=Math.round(S.zoom);$('#zoomAuto').setAttribute('aria-pressed','false');
+  sc.style.transform='';sc.style.willChange='';fit();
+  const n=cabs[i].getBoundingClientRect();
+  st.scrollLeft+=n.left+fx*n.width-z2.mx;st.scrollTop+=n.top+fy*n.height-z2.my;
+}
 function onDown(e){
   if(S.mode==='3d'){if(e.target.closest('.stage-tools'))return;orbitDown(e);return}
-  const el=e.target.closest('.dev');if(!el||!el.dataset.id||e.button>0)return;
+  const el=e.target.closest('.dev');
+  // 2D：在空白處按住拖曳可平移畫面
+  if((!el||!el.dataset.id)&&e.button===0&&!e.target.closest('.stage-tools')){const st=$('#stage');pan={x:e.clientX,y:e.clientY,sl:st.scrollLeft,stp:st.scrollTop,moved:false};return}
+  if(!el||!el.dataset.id||e.button>0)return;
   if(el.closest('.preview'))return;
   const d=getDev(el.dataset.id);if(!d)return;
   const rect=el.getBoundingClientRect();
@@ -1751,6 +1796,9 @@ function onDown(e){
 }
 function onMove(e){
   if(S.mode==='3d'&&(orb||ptrs.size)){orbitMove(e);return}
+  if(pan){const dx=e.clientX-pan.x,dy=e.clientY-pan.y;if(!pan.moved&&Math.hypot(dx,dy)<4)return;
+    if(!pan.moved){pan.moved=true;orbMoved=true;$('#scene').classList.add('panning');hideTip()}
+    const st=$('#stage');st.scrollLeft=pan.sl-dx;st.scrollTop=pan.stp-dy;return}
   if(!drag){hoverTip(e);return}
   const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
   if(!drag.moved){if(Math.hypot(dx,dy)<5)return;drag.moved=true;startFloat();hideTip()}
@@ -1786,6 +1834,7 @@ function startFloat(){
 function clearDrop(){if(drag&&drag.drop){drag.drop.remove();drag.drop=null}}
 function onUp(e){
   if(S.mode==='3d'){orbitUp(e);return}
+  if(pan){const m=pan.moved;pan=null;$('#scene').classList.remove('panning');if(m)setTimeout(()=>{orbMoved=false},0);return}
   if(!drag)return;
   const dd=drag;drag=null;
   try{dd.el.releasePointerCapture(dd.pid)}catch(_){}
@@ -1909,6 +1958,34 @@ function exportJSON(){
   if(downloads){downloads.save({filename:fn,data:json}).then(()=>toast('已匯出 '+fn)).catch(e=>{if(e&&e.code==='declined')return;showJSON(json)});return}
   showJSON(json);
 }
+/* 設備清單匯出成 CSV（含 BOM，Excel 直接開中文不會亂碼） */
+function exportCSV(){
+  const cols=[['機櫃',d=>d.rack],['U 位置',d=>uRange(d)],['起始 U',d=>d.u],['高度 U',d=>d.h],['名稱',d=>d.name],['類型',d=>TYPES[d.type]?.label||d.type],['型號',d=>d.model],
+    ['安裝面',d=>FACE_LABEL[d.face]],['寬度',d=>SIDE_LABEL[d.side]],['狀態',d=>POWERED.has(d.type)?STATUS[d.status]?.t:''],['備註',d=>d.notes]];
+  for(const g of INFO_GROUPS)for(const f of g.f)if(!cols.some(c=>c[0]===f[1]))cols.push([f[1],d=>infoVal(d,f)]);
+  const q=v=>{v=v==null?'':String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const rows=[...S.devices].sort((a,b)=>a.rack.localeCompare(b.rack)||b.u-a.u);
+  const csv='\ufeff'+[cols.map(c=>q(c[0])).join(','),...rows.map(d=>cols.map(c=>q(c[1](d))).join(','))].join('\r\n');
+  const d=new Date();const fn=`T1機櫃設備清單_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.csv`;
+  if(downloads){downloads.save({filename:fn,data:csv}).then(()=>toast('已匯出 '+fn)).catch(e=>{if(e&&e.code==='declined')return;showJSON(csv)});return}
+  showJSON(csv);
+}
+/* 待處理事項：告警、維護、保固、資料缺漏，點一下直接跳到設備 */
+function todoItems(){
+  const out=[];const now=new Date();
+  for(const d of S.devices){
+    if(POWERED.has(d.type)&&d.status==='alarm')out.push({d,lv:0,t:'告警中'});
+    if(POWERED.has(d.type)&&d.status==='maint')out.push({d,lv:1,t:'維護中'});
+    const w=(d.info||{}).warranty;if(w){const days=Math.round((new Date(w)-now)/864e5);if(!isNaN(days)){if(days<0)out.push({d,lv:0,t:`已過保 ${-days} 天`});else if(days<=90)out.push({d,lv:1,t:`保固剩 ${days} 天`})}}
+  }
+  return out.sort((a,b)=>a.lv-b.lv);
+}
+function todoHTML(){
+  const it=todoItems();const powered=S.devices.filter(d=>POWERED.has(d.type));
+  const noIp=powered.filter(d=>!d.ip).length,noSn=powered.filter(d=>!d.sn).length,noOwner=powered.filter(d=>!(d.info||{}).owner).length;
+  const list=it.length?`<div class="todo">${it.slice(0,12).map(x=>`<button class="todo-i lv${x.lv}" data-id="${x.d.id}"><i></i><b>${esc(x.d.name)}</b><span>${x.d.rack} ${uRange(x.d)}</span><em>${x.t}</em></button>`).join('')}${it.length>12?`<div class="sub">另有 ${it.length-12} 項</div>`:''}</div>`:'<div class="sub">目前沒有告警、維護中或保固即將到期的設備。</div>';
+  return `<h3>待處理</h3>${list}<div class="sub" style="margin-top:8px">資料缺漏（供專責人員補齊）：通電設備 ${powered.length} 台中，${noIp} 台沒有 IP、${noSn} 台沒有序號、${noOwner} 台沒有負責人。</div>`;
+}
 function showJSON(json){
   const root=$('#modalRoot');
   root.innerHTML=`<div class="modal"><div class="dialog"><div class="dhead"><h2>匯出 JSON</h2><button class="btn ghost" data-x aria-label="關閉">✕</button></div><div class="dbody"><div class="sub" style="margin-bottom:8px">此環境無法直接下載檔案。請複製下方內容，另存為 .json 檔備份。</div><textarea class="json" id="jsonOut" readonly>${esc(json)}</textarea></div><div class="dfoot"><button class="btn" data-x>關閉</button><button class="btn primary" id="cpy">複製</button></div></div></div>`;
@@ -1930,10 +2007,10 @@ function bind(){
   const room=$('#room');
   $('#scene').addEventListener('pointerdown',onDown);
   $('#scene').addEventListener('contextmenu',e=>{if(S.mode==='3d')e.preventDefault()});
-  $('#scene').addEventListener('wheel',e=>{if(S.mode!=='3d')return;e.preventDefault();setZoomK(cam.k*Math.exp(-e.deltaY*.0012))},{passive:false});
+  $('#scene').addEventListener('wheel',e=>{if(S.mode==='2d'){zoom2d(e);return}if(S.mode!=='3d')return;e.preventDefault();setZoomK(cam.k*Math.exp(-e.deltaY*.0012))},{passive:false});
   $('#m2d').onclick=()=>setMode('2d');$('#m3d').onclick=()=>setMode('3d');$('#mTopo').onclick=()=>setMode('topo');bindTopo();
   $('#tSpin').onclick=e=>{S.autorot=!S.autorot;e.currentTarget.setAttribute('aria-pressed',S.autorot)};
-  $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.k=cam.kr=.68;cam.px=0;cam.py=0;fit();applyCam(true)};
+  $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.k=.68;cam.kr=.68*SS;cam.px=0;cam.py=0;fit();applyCam(true)};
   window.addEventListener('pointermove',onMove);
   window.addEventListener('pointerup',onUp);
   window.addEventListener('pointercancel',()=>{if(drag){clearDrop();drag.float&&drag.float.remove();for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.remove('dragging')}drag=null}});
@@ -1954,7 +2031,7 @@ function bind(){
   $('#zoomR').oninput=e=>{S.zoom=+e.target.value;$('#zoomAuto').setAttribute('aria-pressed','false');fit()};
   $('#zoomAuto').onclick=()=>{S.zoom=null;$('#zoomAuto').setAttribute('aria-pressed','true');fit()};
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
-  $('#expBtn').onclick=exportJSON;
+  $('#expBtn').onclick=exportJSON;$('#csvBtn').onclick=exportCSV;
   $('#impBtn').onclick=()=>{
     const root=$('#modalRoot');
     root.innerHTML=`<div class="modal"><div class="dialog"><div class="dhead"><h2>匯入 JSON</h2><button class="btn ghost" data-x aria-label="關閉">✕</button></div><div class="dbody"><div class="sub" style="margin-bottom:8px">選擇之前匯出的 .json 檔，或把內容貼在下方。</div><button class="btn" id="pick">選擇檔案</button><textarea class="json" id="jsonIn" style="margin-top:10px;min-height:180px" placeholder='{"devices":[...]}'></textarea>
