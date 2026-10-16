@@ -34,6 +34,7 @@
   --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 28px rgba(0,0,0,.35); color-scheme:dark}
 
 html,body{height:100%}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.5;overflow:hidden}
 *{box-sizing:border-box}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -159,6 +160,102 @@ button,input,select,textarea{font:inherit;color:inherit}
 .is3d-ui .only3d{display:inline-flex!important}
 .is3d-ui .only2d{display:none!important}
 .hint3d{font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+/* ── 設備資料卡 ── */
+.card{position:fixed;top:128px;right:calc(360px + 16px);z-index:30;width:min(390px,calc(100vw - 420px));max-height:calc(100vh - 146px);overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 18px 50px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.08);animation:cardIn .32s cubic-bezier(.2,.9,.3,1.1)}
+.card.out{animation:cardOut .2s ease forwards}
+@keyframes cardIn{from{transform:translateX(26px) scale(.98);opacity:.2}}
+@keyframes cardOut{to{transform:translateX(26px);opacity:0}}
+.card-h{position:sticky;top:0;z-index:2;background:var(--panel);padding:14px 16px 10px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.card-h h2{margin:0;font-family:var(--f-disp);font-size:22px;line-height:1.1;text-wrap:balance}
+.card-h .sub{margin-top:3px}
+.card-b{padding:12px 16px 16px;display:flex;flex-direction:column;gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.comp{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.comp .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.comp .bar i{display:block;height:100%;background:var(--accent);border-radius:3px;transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.grp{border:1px solid var(--line);border-radius:10px;overflow:hidden;animation:fadeUp .35s both;animation-delay:calc(var(--i,0) * 45ms)}
+@keyframes fadeUp{from{transform:translateY(8px);opacity:0}}
+.grp>header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--panel-2);font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--muted)}
+.grp>header span{flex:1}
+.grp dl{margin:0;display:grid;grid-template-columns:minmax(92px,auto) 1fr}
+.grp dt,.grp dd{padding:7px 12px;border-top:1px solid var(--line);font-size:13px;margin:0;min-width:0}
+.grp dt{color:var(--muted);font-size:12px;display:flex;align-items:center}
+.grp dd{font-family:var(--f-mono);font-size:12.5px;overflow-wrap:anywhere;cursor:text;transition:background .15s}
+.grp dd:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.grp dd.empty{color:var(--muted);font-family:var(--f-ui);font-style:normal;opacity:.75}
+.grp dd.empty::before{content:"待填寫";border:1px dashed var(--line);border-radius:4px;padding:0 6px;font-size:11px}
+.grp dd input{width:100%;border:1px solid var(--accent);border-radius:5px;background:var(--panel-2);padding:3px 6px;font-family:var(--f-mono);font-size:12.5px}
+.grp dd.flash{animation:flash .9s}
+@keyframes flash{0%{background:color-mix(in srgb,var(--ok) 35%,transparent)}}
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--f-ui);font-size:11px;border-radius:999px;padding:0 7px;margin-left:6px;border:1px solid currentColor}
+.badge.bad{color:var(--bad)}.badge.warn{color:var(--warn)}.badge.ok{color:var(--ok)}
+.rel-list{display:flex;flex-direction:column}
+.rel-row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:13px}
+.rel-row .ln{width:22px;height:3px;border-radius:2px}
+.rel-row .ln.draft{background:repeating-linear-gradient(90deg,currentColor 0 4px,transparent 4px 7px)!important}
+.rel-row b{cursor:pointer}
+.rel-row b:hover{text-decoration:underline;text-decoration-color:var(--accent)}
+.rel-row .m{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.rel-row .acts{display:flex;gap:4px}
+.icon-btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:2px 7px;cursor:pointer;font-size:12px}
+.icon-btn:hover{border-color:var(--muted)}
+.dev.rel::before{content:"";position:absolute;inset:-.07em;border-radius:.08em;box-shadow:0 0 0 .06em #3fd0e8,0 0 .6em rgba(63,208,232,.7);pointer-events:none;z-index:5;animation:relp 1.4s ease-in-out infinite}
+@keyframes relp{50%{box-shadow:0 0 0 .06em #3fd0e8,0 0 1.1em rgba(63,208,232,.95)}}
+.lb.rel .ln{color:#1ea9c2}
+.dev.dropped::after{content:"";position:absolute;inset:-.1em;border-radius:.1em;border:.08em solid #2fe07a;pointer-events:none;animation:ring .7s ease-out forwards}
+@keyframes ring{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.06,1.5)}}
+.dev .fp{transition:filter .6s}
+.dev.st-off .fp{filter:brightness(.78) saturate(.7)}
+.pane.swap{animation:fadeUp .28s both}
+.tbl tbody tr{animation:fadeUp .3s both;animation-delay:calc(min(var(--i,0),24) * 18ms)}
+
+/* ── 網路拓樸 ── */
+.stage.is-topo{overflow:hidden}
+.topo{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;background:
+  radial-gradient(circle at 1px 1px,color-mix(in srgb,var(--muted) 30%,transparent) 1px,transparent 1.5px) 0 0/22px 22px,var(--bg);animation:fadeUp .35s both}
+.topo-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 92%,transparent)}
+.topo-bar .sep{width:1px;height:20px;background:var(--line)}
+.topo svg{flex:1;min-height:0;width:100%;display:block;touch-action:none;cursor:grab;user-select:none}
+.topo svg.panning{cursor:grabbing}
+.tier text{font-family:var(--f-disp);font-size:13px;letter-spacing:.08em;fill:var(--muted)}
+.tier line{stroke:var(--line);stroke-dasharray:3 6}
+.edge path.base{fill:none;stroke-width:2.4;stroke-linecap:round;transition:stroke-width .15s,opacity .25s}
+.edge path.flow{fill:none;stroke-width:2.4;stroke:#fff;opacity:.55;stroke-dasharray:2 16;animation:flow 1.2s linear infinite;pointer-events:none}
+.edge.draft path.base{stroke-dasharray:7 5;opacity:.75}
+.edge.draft path.flow{display:none}
+.edge path.hit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer}
+.edge:hover path.base,.edge.on path.base{stroke-width:4}
+.edge.dim{opacity:.18}
+.edge .pkt{pointer-events:none}
+.edge.new path.base{stroke-dasharray:var(--len) var(--len);stroke-dashoffset:var(--len);animation:draw .8s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes flow{to{stroke-dashoffset:-18}}
+.node{cursor:pointer}
+.node .box{fill:var(--panel);stroke:var(--line);stroke-width:1.2;transition:stroke .15s}
+.node:hover .box{stroke:var(--muted)}
+.node.sel .box{stroke:var(--accent);stroke-width:2.5}
+.node.dim{opacity:.3}
+.node .nm{font-family:var(--f-ui);font-size:12.5px;font-weight:700;fill:var(--ink)}
+.node .sb{font-family:var(--f-mono);font-size:10.5px;fill:var(--muted)}
+.node .rk{font-family:var(--f-mono);font-size:10px;fill:var(--muted)}
+.node .ring{fill:none;stroke:var(--accent);stroke-width:2;opacity:0}
+.node.sel .ring{animation:ringp 1.6s ease-out infinite}
+@keyframes ringp{0%{opacity:.8;transform:scale(1)}100%{opacity:0;transform:scale(1.18)}}
+.node .ring{transform-box:fill-box;transform-origin:center}
+.node.pop{animation:pop2 .45s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:calc(var(--i,0) * 22ms)}
+@keyframes pop2{from{opacity:0;transform:translateY(10px)}}
+.topo-empty{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:min(520px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);font-size:13px;animation:fadeUp .4s .2s both}
+.topo-empty b{display:block;font-family:var(--f-disp);font-size:17px;margin-bottom:4px}
+.ttip{position:absolute;pointer-events:none;background:#0f1314;color:#e8ecea;border:1px solid #2b3336;border-radius:8px;padding:6px 9px;font-size:12px;white-space:nowrap;opacity:0;transition:opacity .12s;z-index:6}
+.ttip.on{opacity:1}
+.legend{display:inline-flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:16px;height:3px;border-radius:2px;display:inline-block}
+@media (max-width:1000px){
+  .card{position:fixed;top:auto;bottom:0;left:0;right:0;width:auto;max-height:72vh;border-radius:14px 14px 0 0;padding-bottom:env(safe-area-inset-bottom,0px);animation:sheetIn .32s cubic-bezier(.2,.9,.3,1.05)}
+  @keyframes sheetIn{from{transform:translateY(40px);opacity:.3}}
+}
 
 /* 標籤欄 */
 .labels{position:relative;width:var(--lw,150px);align-self:stretch}
@@ -501,9 +598,10 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
     </div>
     <div class="stats" id="stats"></div>
     <div class="spacer"></div>
-    <div class="seg" role="group" aria-label="2D 或 3D">
+    <div class="seg" role="group" aria-label="檢視模式">
       <button id="m2d" aria-pressed="false">2D</button>
       <button id="m3d" aria-pressed="true">3D</button>
+      <button id="mTopo" aria-pressed="false">拓樸</button>
     </div>
     <div class="seg" role="group" aria-label="檢視面">
       <button id="vFront" aria-pressed="true">正面</button>
@@ -513,7 +611,7 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
       <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="搜尋名稱、型號、IP" aria-label="搜尋設備">
     </div>
-    <button class="btn" id="undoBtn" title="復原 (Ctrl+Z)" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>復原</button>
+    <button class="btn" id="undoBtn" title="復原 (Ctrl+Z)" aria-label="復原" disabled><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
     <button class="btn primary" id="addBtn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>新增設備</button>
   </header>
 
@@ -529,6 +627,22 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
         <span class="hint3d only3d">拖曳旋轉・右鍵或 Shift 拖曳平移・滾輪縮放</span>
         <span class="zoom"><label for="zoomR">縮放</label><input id="zoomR" type="range" min="10" max="40" step="1" value="20"><button class="chip" id="zoomAuto" aria-pressed="true" style="padding:1px 8px">自動</button></span>
         <span id="typeChips" style="display:contents"></span>
+      </div>
+      <div class="topo" id="topo" hidden>
+        <div class="topo-bar">
+          <button class="btn primary" id="tAdd">＋ 新增連線</button>
+          <button class="btn" id="tDraft">產生連線草稿</button>
+          <button class="btn" id="tConfirmAll" hidden>全部確認</button>
+          <span class="sep"></span>
+          <button class="btn" id="tFit">符合畫面</button>
+          <button class="btn" id="tLayout">自動排列</button>
+          <span class="sep"></span>
+          <span class="legend"><span><i style="background:#2fc171"></i>網路線</span><span><i style="background:#2eb7d0"></i>光纖</span><span><i style="background:#9b7be0"></i>FC</span><span><i style="background:#e9a03a"></i>電源</span><span><i style="background:#9aa3a6"></i>Console</span><span><i style="background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 7px)"></i>待確認</span></span>
+          <span class="sub" id="topoInfo" style="margin-left:auto"></span>
+        </div>
+        <svg id="topoSvg" aria-label="網路拓樸圖"><g id="tView"><g id="tTiers"></g><g id="tEdges"></g><g id="tNodes"></g></g></svg>
+        <div class="ttip" id="ttip"></div>
+        <div class="topo-empty" id="topoEmpty"><b>還沒有連線資料</b>這裡已經列出所有網路相關設備。按「新增連線」逐條建立，或按「產生連線草稿」依機櫃擺設先推測一份，全部標成待確認，交給專責人員到現場核對。拖曳節點可調整位置，拖曳空白處平移，滾輪縮放。</div>
       </div>
       <div class="scene" id="scene">
         <div class="room" id="room">
@@ -642,7 +756,7 @@ function seedDevices(){
 function defaultW(type,h){const t=TYPES[type];if(!t)return 0;if(type==='server')return h>=2?450:250;return t.w}
 
 /* ───────── 狀態 ───────── */
-const S={mode:'2d',autorot:false,devices:seedDevices(),log:[],view:'front',sel:null,q:'',typeFilter:null,labels:true,door:false,heat:false,zoom:null,tab:'info',listSort:'rack'};
+const S={links:[],topo:{},rackMode:'3d',mode:'2d',autorot:false,devices:seedDevices(),log:[],view:'front',sel:null,q:'',typeFilter:null,labels:true,door:false,heat:false,zoom:null,tab:'info',listSort:'rack'};
 const clientId=Math.random().toString(36).slice(2,10);
 let history=[],rev=0,remoteExists=null;
 
@@ -867,7 +981,7 @@ function matches(d){
   return [d.name,d.model,d.ip,d.sn,d.notes,TYPES[d.type]?.label].some(x=>String(x||'').toLowerCase().includes(q));
 }
 function renderRacks(opts={}){
-  const seen=new Set();
+  const seen=new Set();const relSet=S.sel?relatedIds(S.sel):null;
   const filtering=!!(S.q||S.typeFilter);
   for(const d of S.devices){
     for(const face of ['front','rear']){
@@ -883,9 +997,9 @@ function renderRacks(opts={}){
       el.style.setProperty('--heat',heatColor(d));
       el.style.setProperty('--bd',((42-d.u)*0.04).toFixed(2)+'s');
       const cls=['dev','t-'+d.type,sideClass(d,face),vis?'':'ghost','st-'+(POWERED.has(d.type)?d.status:'online')];
-      if(S.sel===d.id)cls.push('sel');
+      if(S.sel===d.id)cls.push('sel');else if(relSet&&relSet.has(d.id))cls.push('rel');
       if(filtering){cls.push(matches(d)?(S.q?'hit':''):'dim')}
-      ['enter','shake','dragging','boot'].forEach(c=>{if(el.classList.contains(c))cls.push(c)});
+      ['enter','shake','dragging','boot','dropped'].forEach(c=>{if(el.classList.contains(c))cls.push(c)});
       el.className=cls.filter(Boolean).join(' ');
       el.setAttribute('aria-label',`${d.rack} 機櫃 ${uRange(d)} ${d.name}`);
     }
@@ -901,20 +1015,22 @@ function renderLabels(){
       const center=d.u-1+d.h/2;
       const dim=(S.q||S.typeFilter)&&!matches(d);
       const sc=POWERED.has(d.type)?`<i class="st" style="background:${STATUS[d.status]?.c}"></i>`:'';
-      return `<div class="lb ${S.sel===d.id?'sel':''} ${dim?'dim':''}" data-id="${d.id}" style="bottom:calc(var(--uh) * ${center});transform:translateY(50%)"><span class="lu">${d.h>1?d.u+'–'+(d.u+d.h-1):d.u}</span>${sc}<span class="ln">${esc(d.name)}${d.side!=='full'?' ('+SIDE_LABEL[d.side]+')':''}</span></div>`;
+      return `<div class="lb ${S.sel===d.id?'sel':''} ${S.sel&&relatedIds(S.sel).has(d.id)?'rel':''} ${dim?'dim':''}" data-id="${d.id}" style="bottom:calc(var(--uh) * ${center});transform:translateY(50%)"><span class="lu">${d.h>1?d.u+'–'+(d.u+d.h-1):d.u}</span>${sc}<span class="ln">${esc(d.name)}${d.side!=='full'?' ('+SIDE_LABEL[d.side]+')':''}</span></div>`;
     }).join('');
   }
 }
 function usedU(rack){const s=new Set();for(const d of S.devices)if(d.rack===rack)for(let i=0;i<d.h;i++)s.add(d.u+i);return s}
+const statPrev={};
 function renderStats(){
   let html='';
   for(const rack of ['A','B']){
     const used=usedU(rack).size;const n=S.devices.filter(d=>d.rack===rack).length;
     const w=S.devices.filter(d=>d.rack===rack&&d.status!=='off').reduce((a,d)=>a+(+d.w||0),0);
     const pct=used/42*100;
-    html+=`<div class="stat"><b>${rack}</b><span class="num">${used}/42U</span><span class="meter"><i style="width:${pct}%;background:${pct>85?'var(--bad)':pct>65?'var(--warn)':'var(--ok)'}"></i></span><span class="num" title="估計功耗">${n} 台・約 ${(w/1000).toFixed(1)} kW</span></div>`;
+    html+=`<div class="stat"><b>${rack}</b><span class="num"><span class="cu" data-k="${rack}u" data-to="${used}">${statPrev[rack+'u']??used}</span>/42U</span><span class="meter"><i style="width:${pct}%;background:${pct>85?'var(--bad)':pct>65?'var(--warn)':'var(--ok)'}"></i></span><span class="num" title="估計功耗">${n} 台・約 ${(w/1000).toFixed(1)} kW</span></div>`;
   }
   $('#stats').innerHTML=html;
+  $('#stats').querySelectorAll('.cu').forEach(el=>{const k=el.dataset.k,to=+el.dataset.to;el.dataset.v=statPrev[k]??to;statPrev[k]=to;countUp(el,to)});
 }
 
 /* ───────── 版面縮放 ───────── */
@@ -961,9 +1077,9 @@ function findFree(rack,h,face,side,prefer){
   for(const u of order){if(validate({rack,u,h,face,side},null).ok)return u}
   return null;
 }
-function snapshot(){history.push(clone(S.devices));if(history.length>40)history.shift();$('#undoBtn').disabled=false}
+function snapshot(){history.push({devices:clone(S.devices),links:clone(S.links)});if(history.length>40)history.shift();$('#undoBtn').disabled=false}
 function addLog(msg){S.log.unshift({t:new Date().toISOString(),msg});if(S.log.length>80)S.log.length=80}
-function commit(msg){if(msg)addLog(msg);renderRacks();renderPane();save()}
+function commit(msg){if(msg)addLog(msg);renderRacks();renderPane();if(cardId)renderCard();if(S.mode==='topo')renderTopo();save()}
 function getDev(id){return S.devices.find(d=>d.id===id)}
 function shake(id){for(const f of ['front','rear']){const el=devEls.get(id+'|'+f);if(el){el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');setTimeout(()=>el.classList.remove('shake'),450)}}}
 function moveDev(id,patch,quiet){
@@ -979,19 +1095,20 @@ function moveDev(id,patch,quiet){
   if(patch.side!==undefined&&patch.side!==d.side)parts.push(`寬度改為${SIDE_LABEL[c.side]}`);
   if(patch.h!==undefined&&patch.h!==d.h)parts.push(`高度改為 ${c.h}U`);
   Object.assign(d,patch);
+  setTimeout(()=>{for(const f of ['front','rear']){const el=devEls.get(id+'|'+f);if(el){el.classList.remove('dropped');void el.offsetWidth;el.classList.add('dropped');setTimeout(()=>el.classList.remove('dropped'),700)}}},30);
   commit(parts.length?`「${d.name}」${parts.join('，')}`:null);
   return true;
 }
 function undo(){
   if(!history.length)return;
-  S.devices=history.pop();
+  const h=history.pop();S.devices=h.devices;S.links=h.links;
   if(S.sel&&!getDev(S.sel))S.sel=null;
   $('#undoBtn').disabled=!history.length;
   commit('復原上一步');toast('已復原');
 }
 function removeDev(id){
   const d=getDev(id);if(!d)return;
-  snapshot();S.devices=S.devices.filter(x=>x.id!==id);if(S.sel===id)S.sel=null;
+  snapshot();S.devices=S.devices.filter(x=>x.id!==id);S.links=S.links.filter(l=>l.a!==id&&l.b!==id);delete S.topo[id];if(S.sel===id){S.sel=null;closeCard()}
   commit(`刪除「${d.name}」（${d.rack} ${uRange(d)}）`);
   toast(`已刪除「${d.name}」`,false,'復原',undo);
 }
@@ -1007,7 +1124,7 @@ function duplicate(id){
 
 /* ───────── 選取、檢視 ───────── */
 function select(id,scroll){
-  S.sel=id;renderRacks();if(S.tab!=='info'&&id&&!scroll)setTab('info');else renderPane();
+  S.sel=id;renderRacks();if(id)openCard(id);else if(cardId)closeCard();if(S.mode==='topo')renderTopo();if(S.tab!=='info'&&id&&!scroll)setTab('info');else renderPane();
   if(id&&scroll){const el=devEls.get(id+'|'+(isVisible(getDev(id),S.view)?S.view:(S.view==='front'?'rear':'front')));if(el&&!isVisible(getDev(id),S.view))setView(S.view==='front'?'rear':'front');el&&el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'})}
 }
 function setView(v){
@@ -1038,6 +1155,14 @@ function applyCam(anim){
   if(rear!==(S.view==='rear')){setView._fromCam=true;setView(rear?'rear':'front');setView._fromCam=false}
 }
 function setMode(m){
+  const topo=m==='topo';
+  $('#topo').hidden=!topo;$('#scene').hidden=topo;$('#tools').hidden=topo;$('#stage').classList.toggle('is-topo',topo);
+  $('#mTopo').setAttribute('aria-pressed',topo);
+  document.querySelectorAll('#vFront,#vRear').forEach(b=>b.disabled=topo);
+  if(topo){S.mode='topo';document.body.classList.remove('is3d-ui');S.autorot=false;$('#m2d').setAttribute('aria-pressed','false');$('#m3d').setAttribute('aria-pressed','false');$('#stage').scrollTop=0;
+    requestAnimationFrame(()=>{if(topoFirst)fitTopo();renderTopo();if(topoFirst===false&&!tv._fitted){fitTopo();tv._fitted=true;renderTopo()}});
+    try{localStorage.setItem('t1-rack-mode',m)}catch(_){}return}
+  S.rackMode=m;
   S.mode=m;
   $('#scene').classList.toggle('mode3d',m==='3d');$('#stage').classList.toggle('is3d',m==='3d');
   document.body.classList.toggle('is3d-ui',m==='3d');
@@ -1050,8 +1175,11 @@ function setMode(m){
 function orbitDown(e){
   ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(ptrs.size===2){const [a,b]=[...ptrs.values()];orb={pinch:Math.hypot(a.x-b.x,a.y-b.y),k:cam.k,moved:true};orbMoved=true;return}
-  const el=e.target.closest('.dev');
-  orb={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch,px:cam.px,py:cam.py,pan:e.button===2||e.shiftKey||e.button===1,moved:false,devId:el&&el.dataset.id,pid:e.pointerId};
+  // 3D 場景中 e.target 有時會回報外層元素，改用 elementsFromPoint 找真正被點到的設備或空位
+  const hits=document.elementsFromPoint(e.clientX,e.clientY);
+  const el=hits.find(x=>x.classList&&x.classList.contains('dev')&&x.closest('.room'));
+  const slot=!el&&hits.find(x=>x.classList&&x.classList.contains('slot'));
+  orb={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch,px:cam.px,py:cam.py,pan:e.button===2||e.shiftKey||e.button===1,moved:false,devId:el&&el.dataset.id,slot:slot?{rack:slot.closest('.bay').dataset.rack,u:+slot.dataset.u}:null,pid:e.pointerId};
   orbMoved=false;
   try{$('#scene').setPointerCapture(e.pointerId)}catch(_){}
 }
@@ -1070,12 +1198,297 @@ function orbitUp(e){
   if(!orb)return;
   const o=orb;orb=null;$('#scene').classList.remove('orbiting');
   if(!o.moved&&o.devId)select(o.devId);
+  else if(!o.moved&&o.slot&&e.button===0)openAdd(o.slot);
   setTimeout(()=>{orbMoved=false},0);
 }
 function spinLoop(){if(S.autorot&&!orb&&S.mode==='3d'){cam.yaw+=.18;applyCam()}requestAnimationFrame(spinLoop)}
 
+/* ───────── 設備完整資料 ───────── */
+const INFO_GROUPS=[
+ {k:'net',t:'網路',f:[['hostname','主機名稱'],['ip','IP 位址',1],['mac','MAC 位址'],['vlan','VLAN'],['gateway','預設閘道'],['mgmt','管理介面網址']]},
+ {k:'sys',t:'系統與規格',f:[['os','作業系統／韌體'],['cpu','CPU'],['ram','記憶體'],['disk','儲存容量'],['purpose','用途／服務']]},
+ {k:'asset',t:'資產與保固',f:[['sn','序號',1],['assetNo','資產編號'],['vendor','廠商／供應商'],['purchase','購買日期',0,'date'],['warranty','保固到期',0,'date'],['contract','維護合約']]},
+ {k:'own',t:'管理與負責人',f:[['owner','負責人'],['contact','聯絡方式'],['dept','使用單位'],['account','帳號存放處（請勿填密碼）']]},
+ {k:'pwr',t:'電源',f:[['w','估計功耗（W）',1,'number'],['psu','電源迴路（A/B 路）'],['ups','UPS']]}
+];
+const LINK_TYPES={eth:{t:'網路線',c:'#2fc171'},fiber:{t:'光纖',c:'#2eb7d0'},fc:{t:'FC 光纖通道',c:'#9b7be0'},power:{t:'電源',c:'#e9a03a'},console:{t:'Console／KVM',c:'#9aa3a6'}};
+const SPEEDS=['','100M','1G','2.5G','10G','25G','40G','8G FC','16G FC','32G FC'];
+function infoVal(d,f){return f[2]?d[f[0]]:(d.info||{})[f[0]]}
+function completeness(d){let n=0,t=0;for(const g of INFO_GROUPS)for(const f of g.f){t++;const v=infoVal(d,f);if(v!==undefined&&v!==null&&String(v).trim()!==''&&!(f[0]==='w'&&!+v))n++}return {n,t}}
+function warrantyBadge(v){
+  if(!v)return '';const d=new Date(v);if(isNaN(d))return '';
+  const days=Math.round((d-new Date())/864e5);
+  if(days<0)return `<span class="badge bad">已過保 ${-days} 天</span>`;
+  if(days<=90)return `<span class="badge warn">剩 ${days} 天</span>`;
+  return `<span class="badge ok">保固中</span>`;
+}
+function linksOf(id){return S.links.filter(l=>l.a===id||l.b===id)}
+function relatedIds(id){const s=new Set();for(const l of linksOf(id))s.add(l.a===id?l.b:l.a);return s}
+let cardId=null;
+function openCard(id){cardId=id;renderCard(true)}
+function closeCard(){const c=$('#card');cardId=null;if(!c)return;c.classList.add('out');setTimeout(()=>c.remove(),200)}
+function renderCard(fresh){
+  let c=$('#card');const d=cardId&&getDev(cardId);
+  if(!d){if(c)c.remove();cardId=null;return}
+  if(!c){c=document.createElement('aside');c.id='card';c.className='card';c.setAttribute('aria-label','設備完整資料');$('#stage').appendChild(c)}
+  else if(fresh){c.classList.remove('out');c.style.animation='none';void c.offsetWidth;c.style.animation=''}
+  const T=TYPES[d.type];const cp=completeness(d);
+  const st=POWERED.has(d.type)?`<span class="pill"><i style="background:${STATUS[d.status].c}"></i>${STATUS[d.status].t}</span>`:'';
+  const groups=INFO_GROUPS.map((g,gi)=>`<section class="grp" style="--i:${gi}"><header><span>${g.t}</span></header><dl>${g.f.map(f=>{
+    const v=infoVal(d,f);const empty=v===undefined||v===null||String(v).trim()===''||(f[0]==='w'&&!+v);
+    const extra=f[0]==='warranty'?warrantyBadge(v):'';
+    return `<dt>${esc(f[1])}</dt><dd tabindex="0" data-f="${f[0]}" data-top="${f[2]?1:0}" data-kind="${f[3]||'text'}" class="${empty?'empty':''}">${empty?'':esc(v)+extra}</dd>`}).join('')}</dl></section>`).join('');
+  const ls=linksOf(d.id);
+  const rel=`<section class="grp" style="--i:${INFO_GROUPS.length}"><header><span>連線關聯（${ls.length}）</span><button class="icon-btn" id="cAddLink">＋ 新增連線</button></header>
+    <div class="rel-list">${ls.length?ls.map(l=>{const o=getDev(l.a===d.id?l.b:l.a);const mine=l.a===d.id?l.aPort:l.bPort,their=l.a===d.id?l.bPort:l.aPort;const LT=LINK_TYPES[l.type]||LINK_TYPES.eth;
+      return `<div class="rel-row"><i class="ln ${l.draft?'draft':''}" style="background:${LT.c};color:${LT.c}"></i><div style="min-width:0"><b data-go="${o?o.id:''}">${esc(o?o.name:'（已刪除的設備）')}</b>${l.draft?'<span class="badge warn">待確認</span>':''}<div class="m">${esc(LT.t)}${l.speed?'・'+esc(l.speed):''}${mine||their?`・${esc(mine||'?')} ↔ ${esc(their||'?')}`:''}${o?`・${o.rack} ${uRange(o)}`:''}</div></div><div class="acts">${l.draft?`<button class="icon-btn" data-ok="${l.id}" title="確認這條連線">確認</button>`:''}<button class="icon-btn" data-edit="${l.id}">編輯</button></div></div>`}).join(''):'<div class="rel-row" style="grid-template-columns:1fr"><span class="sub">還沒有連線資料。新增後會同時出現在網路拓樸圖。</span></div>'}</div></section>`;
+  c.innerHTML=`<div class="card-h"><div style="flex:1;min-width:0"><span class="pill"><i style="background:${T.color}"></i>${esc(T.label)}</span><h2 style="margin-top:6px">${esc(d.name)}</h2><div class="sub">${esc(d.model||'型號待填寫')}</div>
+      <div class="chips"><span class="pill">${d.rack} 機櫃 ${uRange(d)}</span><span class="pill">${FACE_LABEL[d.face]}</span>${d.side!=='full'?`<span class="pill">${SIDE_LABEL[d.side]}</span>`:''}${st}</div></div>
+      <button class="btn ghost" id="cClose" aria-label="關閉資料卡">✕</button></div>
+    <div class="card-b">
+      <div class="comp"><span>資料完整度</span><span class="bar"><i style="width:${fresh?0:cp.n/cp.t*100}%"></i></span><b class="num">${cp.n}/${cp.t}</b></div>
+      ${groups}${rel}
+      <section class="grp" style="--i:${INFO_GROUPS.length+1}"><header><span>備註</span></header><div style="padding:10px 12px"><textarea id="cNotes" style="width:100%;min-height:64px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);padding:6px 8px;resize:vertical" placeholder="例如：上線日期、異動原因、注意事項">${esc(d.notes)}</textarea></div></section>
+      <div class="actions" style="margin:0"><button class="btn" id="cTopo">在拓樸中查看</button><button class="btn" id="cCopy">複製資料</button><button class="btn" id="cEdit">編輯位置與外觀</button></div>
+    </div>`;
+  if(fresh)requestAnimationFrame(()=>requestAnimationFrame(()=>{const b=c.querySelector('.comp .bar i');if(b)b.style.width=(cp.n/cp.t*100)+'%'}));
+  c.querySelector('#cClose').onclick=()=>select(null);
+  c.querySelectorAll('dd[data-f]').forEach(dd=>{const go=()=>inlineEdit(d.id,dd);dd.onclick=go;dd.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}}});
+  c.querySelector('#cNotes').onchange=e=>editField(d.id,'notes',e.target.value.trim(),'備註');
+  c.querySelector('#cAddLink').onclick=()=>openLink({a:d.id});
+  c.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openLink(S.links.find(l=>l.id===b.dataset.edit)));
+  c.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{const l=S.links.find(x=>x.id===b.dataset.ok);if(!l)return;snapshot();l.draft=false;commit(`確認連線：${linkLabel(l)}`)});
+  c.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{if(b.dataset.go)focusDevice(b.dataset.go)});
+  c.querySelector('#cTopo').onclick=()=>setMode('topo');
+  c.querySelector('#cEdit').onclick=()=>setTab('info');
+  c.querySelector('#cCopy').onclick=()=>{
+    const lines=[`${d.name}（${T.label}）`,`型號：${d.model||'—'}`,`位置：${d.rack} 機櫃 ${uRange(d)}・${FACE_LABEL[d.face]}`];
+    for(const g of INFO_GROUPS)for(const f of g.f){const v=infoVal(d,f);if(v&&!(f[0]==='w'&&!+v))lines.push(`${f[1]}：${v}`)}
+    for(const l of ls){const o=getDev(l.a===d.id?l.b:l.a);lines.push(`連線：${o?o.name:'?'}（${(LINK_TYPES[l.type]||{}).t||''}${l.draft?'，待確認':''}）`)}
+    if(d.notes)lines.push('備註：'+d.notes);
+    navigator.clipboard.writeText(lines.join('\n')).then(()=>toast('已複製設備資料')).catch(()=>toast('瀏覽器不允許複製，請手動選取',true));
+  };
+}
+function inlineEdit(id,dd){
+  if(dd.querySelector('input'))return;
+  const d=getDev(id);const key=dd.dataset.f,top=dd.dataset.top==='1',kind=dd.dataset.kind;
+  const f=INFO_GROUPS.flatMap(g=>g.f).find(x=>x[0]===key);
+  const cur=top?d[key]:(d.info||{})[key];
+  dd.classList.remove('empty');
+  dd.innerHTML=`<input type="${kind==='date'?'date':kind==='number'?'number':'text'}" value="${esc(cur??'')}" aria-label="${esc(f[1])}">`;
+  const inp=dd.querySelector('input');inp.focus();inp.select&&kind!=='date'&&inp.select();
+  let done=false;
+  const fin=(save)=>{if(done)return;done=true;
+    let v=inp.value.trim();if(kind==='number')v=Math.max(0,+v||0);
+    if(save&&String(v)!==String(cur??'')){
+      snapshot();if(top)d[key]=v;else{d.info=Object.assign({},d.info||{});if(v==='')delete d.info[key];else d.info[key]=v}
+      commit(`「${d.name}」更新${f[1].replace(/（.*/,'')}`);
+      const nd=$('#card')&&$('#card').querySelector(`dd[data-f="${key}"]`);if(nd){nd.classList.add('flash')}
+    }else renderCard();
+  };
+  inp.onblur=()=>fin(true);
+  inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();fin(true)}else if(e.key==='Escape'){e.stopPropagation();fin(false)}};
+}
+function focusDevice(id){
+  const d=getDev(id);if(!d)return;
+  if(S.mode==='topo'){select(id);return}
+  select(id,true);
+  if(S.mode==='3d'){const face=isVisible(d,'front')?'front':'rear';const target=(face==='rear'?180:0)+(d.rack==='A'?-18:18);let df=((target-cam.yaw)%360+540)%360-180;cam.yaw+=df;cam.pitch=-8;applyCam(true)}
+}
+
+/* ───────── 連線 ───────── */
+function linkLabel(l){const a=getDev(l.a),b=getDev(l.b);return `${a?a.name:'?'} ↔ ${b?b.name:'?'}`}
+function devOptions(sel){
+  const list=S.devices.slice().sort((x,y)=>x.rack.localeCompare(y.rack)||y.u-x.u);
+  return ['A','B'].map(r=>`<optgroup label="${r} 機櫃">${list.filter(d=>d.rack===r).map(d=>`<option value="${d.id}" ${d.id===sel?'selected':''}>${esc(d.name)}（${uRange(d)}）</option>`).join('')}</optgroup>`).join('');
+}
+function openLink(pre={}){
+  const isNew=!pre.id;
+  const l=Object.assign({type:'eth',aPort:'',bPort:'',speed:'',note:'',draft:false},clone(pre));
+  if(!l.a)l.a=S.sel||S.devices[0].id;
+  if(!l.b){const o=S.devices.find(d=>d.id!==l.a&&(d.type==='switch'));l.b=o?o.id:S.devices.find(d=>d.id!==l.a).id}
+  const root=$('#modalRoot');
+  root.innerHTML=`<div class="modal"><div class="dialog sm" role="dialog" aria-modal="true" aria-labelledby="lkT" style="width:min(560px,100%)">
+   <div class="dhead"><h2 id="lkT">${isNew?'新增連線':'編輯連線'}</h2><button class="btn ghost" data-x aria-label="關閉">✕</button></div>
+   <div class="dbody"><div class="form">
+     <div class="field"><label for="lA">設備 A</label><select id="lA">${devOptions(l.a)}</select></div>
+     <div class="field"><label for="lAp">A 端埠口</label><input id="lAp" value="${esc(l.aPort)}" placeholder="例如 port1、eth0"></div>
+     <div class="field"><label for="lB">設備 B</label><select id="lB">${devOptions(l.b)}</select></div>
+     <div class="field"><label for="lBp">B 端埠口</label><input id="lBp" value="${esc(l.bPort)}" placeholder="例如 Gi1/0/24"></div>
+     <div class="field"><label for="lT">線路類型</label><select id="lT">${Object.entries(LINK_TYPES).map(([k,v])=>`<option value="${k}" ${l.type===k?'selected':''}>${v.t}</option>`).join('')}</select></div>
+     <div class="field"><label for="lS">速率</label><select id="lS">${SPEEDS.map(s=>`<option value="${s}" ${l.speed===s?'selected':''}>${s||'未指定'}</option>`).join('')}</select></div>
+     <div class="field full"><label for="lN">說明</label><input id="lN" value="${esc(l.note)}" placeholder="例如：上聯核心、VLAN 10 trunk"></div>
+     <label class="full" style="display:flex;gap:8px;align-items:center;font-size:13px"><input type="checkbox" id="lD" ${l.draft?'checked':''}> 標記為「待確認」（尚未到現場核對）</label>
+   </div><div class="sub" id="lMsg" style="margin-top:8px"></div></div>
+   <div class="dfoot">${isNew?'':'<button class="btn danger" id="lDel" style="margin-right:auto">刪除連線</button>'}<button class="btn" data-x>取消</button><button class="btn primary" id="lOk">${isNew?'建立連線':'儲存'}</button></div></div></div>`;
+  const close=()=>root.innerHTML='';
+  root.querySelectorAll('[data-x]').forEach(b=>b.onclick=close);
+  root.querySelector('.modal').addEventListener('pointerdown',e=>{if(e.target.classList.contains('modal'))close()});
+  root.querySelector('#lOk').onclick=()=>{
+    const v=id=>root.querySelector(id).value;
+    const n={id:l.id||('l'+Date.now().toString(36)+Math.random().toString(36).slice(2,5)),a:v('#lA'),b:v('#lB'),aPort:v('#lAp').trim(),bPort:v('#lBp').trim(),type:v('#lT'),speed:v('#lS'),note:v('#lN').trim(),draft:root.querySelector('#lD').checked};
+    if(n.a===n.b){root.querySelector('#lMsg').innerHTML='<span style="color:var(--bad)">●</span> 兩端不能是同一台設備';return}
+    snapshot();
+    if(isNew){S.links.push(n);newLinks.add(n.id)}else{const i=S.links.findIndex(x=>x.id===n.id);S.links[i]=n}
+    close();commit(`${isNew?'新增':'修改'}連線：${linkLabel(n)}`);toast(isNew?'已建立連線':'已儲存連線');
+  };
+  const del=root.querySelector('#lDel');
+  if(del)del.onclick=()=>{snapshot();S.links=S.links.filter(x=>x.id!==l.id);close();commit(`刪除連線：${linkLabel(l)}`);toast('已刪除連線',false,'復原',undo)};
+}
+function draftLinks(){
+  const D=S.devices,has=(a,b)=>S.links.some(l=>(l.a===a&&l.b===b)||(l.a===b&&l.b===a));
+  const out=[];const add=(a,b,type,speed)=>{if(!a||!b||a===b||has(a.id,b.id)||out.some(l=>(l.a===a.id&&l.b===b.id)||(l.a===b.id&&l.b===a.id)))return;out.push({id:'l'+Date.now().toString(36)+out.length+Math.random().toString(36).slice(2,4),a:a.id,b:b.id,aPort:'',bPort:'',type,speed:speed||'',note:'依機櫃擺設推測，待專責人員確認',draft:true})};
+  const fw=D.find(d=>d.type==='firewall');
+  const core=D.find(d=>d.type==='switch'&&/core|核心/i.test(d.name+d.model+d.notes));
+  const farm=D.find(d=>d.type==='switch'&&/server\s*farm/i.test(d.name));
+  const san=D.find(d=>d.type==='switch'&&d.variant==='san');
+  const poe=D.find(d=>d.type==='switch'&&/224E/i.test(d.name+d.model));
+  const zy=D.find(d=>d.type==='switch'&&d.variant==='zyxel');
+  for(const d of D){
+    if(d.type==='appliance'&&(d.variant==='modem'||d.variant==='cht'))add(d,fw,'eth');
+    if(d.type==='switch'&&d!==core&&d!==san)add(d,core||fw,'eth');
+    if(d.type==='server'||(d.type==='storage'&&d.variant!=='msa'))add(d,farm||core,'eth');
+    if(d.type==='storage'&&d.variant==='msa')add(d,san,'fc');
+    if(d.type==='server'&&/esxi/i.test(d.name))add(d,san,'fc');
+    if(d.type==='nvr')add(d,zy||core,'eth');
+    if(d.type==='appliance'&&(d.variant==='voip'||d.variant==='pbx'))add(d,poe||core,'eth');
+    if(d.type==='appliance'&&d.variant==='hub')add(d,core,'eth');
+  }
+  if(fw&&core)add(fw,core,'eth');
+  return out;
+}
+
+/* ───────── 網路拓樸 ───────── */
+const NET_TYPES=new Set(['server','storage','switch','firewall','appliance','nvr']);
+const TIERS=['外部線路','防火牆','核心交換器','交換器','伺服器與終端'];
+const newLinks=new Set();
+let tv={x:0,y:0,k:1},topoFirst=true,tdrag=null;
+function tierOf(d){
+  if(d.type==='appliance'&&(d.variant==='modem'||d.variant==='cht'))return 0;
+  if(d.type==='firewall')return 1;
+  if(d.type==='switch'&&/core|核心/i.test(d.name+d.model+d.notes))return 2;
+  if(d.type==='switch')return 3;
+  return 4;
+}
+const NW=184,NH=48;
+function fitText(t,maxW,px){t=String(t||'');let w=0,out='';for(const ch of t){const cw=/[\u2e80-\uffff]/.test(ch)?px:px*.58;if(w+cw>maxW){return out.replace(/\s+$/,'')+'…'}w+=cw;out+=ch}return out}
+function topoNodes(){
+  const linked=new Set(S.links.flatMap(l=>[l.a,l.b]));
+  return S.devices.filter(d=>NET_TYPES.has(d.type)||linked.has(d.id));
+}
+function layoutDefault(nodes,W){
+  const rows=TIERS.map(()=>[]);for(const d of nodes)rows[tierOf(d)].push(d);
+  const pos={};
+  rows.forEach((row,t)=>{
+    row.sort((a,b)=>a.rack.localeCompare(b.rack)||b.u-a.u);
+    const per=Math.max(1,Math.floor((W-120)/(NW+22)));
+    row.forEach((d,i)=>{const line=Math.floor(i/per),idx=i%per,cnt=Math.min(per,row.length-line*per);
+      const span=cnt*(NW+22)-22;pos[d.id]={x:Math.round(W/2-span/2+idx*(NW+22)),y:60+t*130+line*(NH+20)+(t===4?0:0)}});
+  });
+  // 最後一層可能換行，把它推到最下面
+  return pos;
+}
+function edgePath(p,q){
+  const x1=p.x+NW/2,y1=p.y+NH/2,x2=q.x+NW/2,y2=q.y+NH/2;
+  if(Math.abs(y1-y2)<10){const my=y1-50;return `M${x1} ${y1-NH/2}C${x1} ${my},${x2} ${my},${x2} ${y2-NH/2}`}
+  const [ax,ay,bx,by]=y1<y2?[x1,y1+NH/2,x2,y2-NH/2]:[x1,y1-NH/2,x2,y2+NH/2];
+  const my=(ay+by)/2;return `M${ax} ${ay}C${ax} ${my},${bx} ${my},${bx} ${by}`;
+}
+function glyph(d){
+  const c=TYPES[d.type].color;
+  const r=d.type==='server'||d.type==='storage'||d.type==='nvr'?`<rect x="0" y="2" width="22" height="7" rx="1.5"/><rect x="0" y="11" width="22" height="7" rx="1.5"/><circle cx="18" cy="5.5" r="1.2" fill="var(--panel)"/><circle cx="18" cy="14.5" r="1.2" fill="var(--panel)"/>`
+    :d.type==='firewall'?`<rect x="0" y="2" width="22" height="16" rx="2"/><path d="M0 8h22M0 13h22M7 2v6M15 8v5M7 13v5" stroke="var(--panel)" stroke-width="1.4"/>`
+    :d.type==='switch'?`<rect x="0" y="5" width="22" height="10" rx="2"/><path d="M4 10h2M8 10h2M12 10h2M16 10h2" stroke="var(--panel)" stroke-width="2"/>`
+    :`<rect x="3" y="5" width="16" height="10" rx="2"/><path d="M7 5 5 1M15 5l2-4" stroke="${c}" stroke-width="1.4"/>`;
+  return `<g transform="translate(12,${NH/2-10})" fill="${c}">${r}</g>`;
+}
+function renderTopo(){
+  const box=$('#topo');if(!box||box.hidden)return;
+  const svg=$('#topoSvg');const W=Math.max(700,svg.clientWidth/(tv.k||1));
+  const nodes=topoNodes();const defs=layoutDefault(nodes,Math.max(1500,svg.clientWidth));
+  const pos=id=>S.topo[id]||defs[id];
+  const filtering=!!(S.q||S.typeFilter);
+  const rel=S.sel?relatedIds(S.sel):null;
+  const tiers=TIERS.map((t,i)=>`<g class="tier"><line x1="-2000" x2="4000" y1="${46+i*130}" y2="${46+i*130}"/><text x="16" y="${40+i*130}">${t}</text></g>`).join('');
+  const ids=new Set(nodes.map(n=>n.id));
+  const edges=S.links.filter(l=>ids.has(l.a)&&ids.has(l.b)).map(l=>{
+    const p=pos(l.a),q=pos(l.b);if(!p||!q)return '';
+    const LT=LINK_TYPES[l.type]||LINK_TYPES.eth;const path=edgePath(p,q);
+    const on=S.sel&&(l.a===S.sel||l.b===S.sel);const dim=S.sel&&!on;
+    const a=getDev(l.a),b=getDev(l.b);const live=!l.draft&&a.status!=='off'&&b.status!=='off';
+    const pk=live?`<circle class="pkt" r="3.2" fill="${LT.c}"><animateMotion dur="${(2+((hash(l.id)%20)/10)).toFixed(1)}s" repeatCount="indefinite" path="${path}"/></circle>`:'';
+    return `<g class="edge ${l.draft?'draft':''} ${on?'on':''} ${dim?'dim':''} ${newLinks.has(l.id)?'new':''}" data-l="${l.id}"><path class="hit" d="${path}"/><path class="base" d="${path}" stroke="${LT.c}"/><path class="flow" d="${path}"/>${pk}</g>`;
+  }).join('');
+  const ns=nodes.map((d,i)=>{const p=pos(d.id);const dim=(filtering&&!matches(d))||(rel&&d.id!==S.sel&&!rel.has(d.id));
+    const sub=d.ip||d.model||TYPES[d.type].label;const sc=POWERED.has(d.type)?STATUS[d.status].c:'var(--muted)';
+    return `<g class="node ${S.sel===d.id?'sel':''} ${dim?'dim':''} ${topoFirst?'pop':''}" data-id="${d.id}" transform="translate(${p.x},${p.y})" style="--i:${i}"><rect class="ring" width="${NW}" height="${NH}" rx="10"/><rect class="box" width="${NW}" height="${NH}" rx="10"/>${glyph(d)}<circle cx="${NW-12}" cy="13" r="4" fill="${sc}"/><text class="nm" x="44" y="21">${esc(fitText(d.name,NW-44-24,12.5))}</text><text class="sb" x="44" y="37">${esc(fitText(`${d.rack}${d.u}${d.h>1?'-'+(d.u+d.h-1):''}・${sub}`,NW-44-10,10.5))}</text></g>`}).join('');
+  $('#tView').setAttribute('transform',`translate(${tv.x},${tv.y}) scale(${tv.k})`);
+  $('#tTiers').innerHTML=tiers;$('#tEdges').innerHTML=edges;$('#tNodes').innerHTML=ns;
+  // 新連線的描線動畫
+  $('#tEdges').querySelectorAll('.edge.new path.base').forEach(p=>{p.style.setProperty('--len',Math.ceil(p.getTotalLength()))});
+  setTimeout(()=>{newLinks.clear();$('#tEdges').querySelectorAll('.edge.new').forEach(g=>g.classList.remove('new'))},900);
+  topoFirst=false;
+  const nd=S.links.filter(l=>l.draft).length;
+  $('#topoInfo').textContent=`${nodes.length} 台設備・${S.links.length} 條連線${nd?`（${nd} 條待確認）`:''}`;
+  $('#topoEmpty').hidden=S.links.length>0;
+  $('#tConfirmAll').hidden=!nd;
+}
+function svgPt(e){const svg=$('#topoSvg');const r=svg.getBoundingClientRect();return {x:(e.clientX-r.left-tv.x)/tv.k,y:(e.clientY-r.top-tv.y)/tv.k}}
+function bindTopo(){
+  const svg=$('#topoSvg'),tip=$('#ttip');
+  svg.addEventListener('pointerdown',e=>{
+    const n=e.target.closest('.node'),ed=e.target.closest('.edge');
+    svg.setPointerCapture(e.pointerId);
+    if(n){const id=n.dataset.id;const nodes=topoNodes();const defs=layoutDefault(nodes,Math.max(1500,svg.clientWidth));const p=S.topo[id]||defs[id];const pt=svgPt(e);tdrag={kind:'node',id,el:n,ox:pt.x-p.x,oy:pt.y-p.y,moved:false,sx:e.clientX,sy:e.clientY,defs};return}
+    if(ed){tdrag={kind:'edge',id:ed.dataset.l,moved:false,sx:e.clientX,sy:e.clientY};return}
+    tdrag={kind:'pan',x:tv.x,y:tv.y,sx:e.clientX,sy:e.clientY,moved:false};svg.classList.add('panning');
+  });
+  svg.addEventListener('pointermove',e=>{
+    if(!tdrag){
+      const ed=e.target.closest('.edge');
+      if(ed){const l=S.links.find(x=>x.id===ed.dataset.l);if(l){const LT=LINK_TYPES[l.type]||LINK_TYPES.eth;tip.innerHTML=`${esc(linkLabel(l))}<br><span style="color:#a9b4b2">${esc(LT.t)}${l.speed?'・'+esc(l.speed):''}${l.aPort||l.bPort?`・${esc(l.aPort||'?')} ↔ ${esc(l.bPort||'?')}`:''}${l.draft?'・待確認':''}</span>`;const r=$('#topo').getBoundingClientRect();tip.style.left=(e.clientX-r.left+14)+'px';tip.style.top=(e.clientY-r.top+12)+'px';tip.classList.add('on')}}
+      else tip.classList.remove('on');
+      return}
+    const dx=e.clientX-tdrag.sx,dy=e.clientY-tdrag.sy;
+    if(!tdrag.moved&&Math.hypot(dx,dy)<4)return;tdrag.moved=true;tip.classList.remove('on');
+    if(tdrag.kind==='pan'){tv.x=tdrag.x+dx;tv.y=tdrag.y+dy;$('#tView').setAttribute('transform',`translate(${tv.x},${tv.y}) scale(${tv.k})`)}
+    if(tdrag.kind==='node'){const pt=svgPt(e);const x=Math.round(pt.x-tdrag.ox),y=Math.round(pt.y-tdrag.oy);S.topo[tdrag.id]={x,y};
+      tdrag.el.setAttribute('transform',`translate(${x},${y})`);
+      // 只更新相連的線
+      const P=id=>S.topo[id]||tdrag.defs[id];
+      for(const l of linksOf(tdrag.id)){const g=$('#tEdges').querySelector(`[data-l="${l.id}"]`);if(!g)continue;const p=P(l.a),q=P(l.b);if(!p||!q)continue;const d=edgePath(p,q);g.querySelectorAll('path').forEach(pa=>pa.setAttribute('d',d));const am=g.querySelector('animateMotion');am&&am.setAttribute('path',d)}
+    }
+  });
+  const up=e=>{
+    if(!tdrag)return;const t=tdrag;tdrag=null;svg.classList.remove('panning');
+    if(t.kind==='node'){if(t.moved){save();}else{select(t.id);openCard(t.id)}}
+    else if(t.kind==='edge'&&!t.moved)openLink(S.links.find(l=>l.id===t.id));
+    else if(t.kind==='pan'&&!t.moved&&S.sel)select(null);
+  };
+  svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);
+  svg.addEventListener('pointerleave',()=>tip.classList.remove('on'));
+  svg.addEventListener('wheel',e=>{e.preventDefault();const r=svg.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const k=Math.max(.35,Math.min(2.5,tv.k*Math.exp(-e.deltaY*.0015)));tv.x=mx-(mx-tv.x)*k/tv.k;tv.y=my-(my-tv.y)*k/tv.k;tv.k=k;$('#tView').setAttribute('transform',`translate(${tv.x},${tv.y}) scale(${tv.k})`)},{passive:false});
+  $('#tAdd').onclick=()=>openLink({});
+  $('#tDraft').onclick=()=>{const ls=draftLinks();if(!ls.length){toast('沒有可推測的新連線');return}
+    confirmBox('產生連線草稿',`<p style="margin:0 0 8px">依照目前機櫃擺設推測出 <b>${ls.length}</b> 條常見連線，例如伺服器接到 Server Farm Switch、交換器上聯核心交換器、ESXi 與儲存陣列接 SAN Switch。</p><p style="margin:0" class="sub">全部會標成「待確認」並以虛線顯示，請專責人員到現場核對後逐條確認或刪除。</p>`,'產生草稿',()=>{snapshot();ls.forEach(l=>{S.links.push(l);newLinks.add(l.id)});commit(`產生 ${ls.length} 條連線草稿（待確認）`);toast(`已產生 ${ls.length} 條待確認連線`)})};
+  $('#tConfirmAll').onclick=()=>{const n=S.links.filter(l=>l.draft).length;confirmBox('全部確認',`<p style="margin:0">把 ${n} 條「待確認」連線全部標為已確認？</p>`,'全部確認',()=>{snapshot();S.links.forEach(l=>l.draft=false);commit(`確認 ${n} 條連線`)})};
+  $('#tLayout').onclick=()=>{S.topo={};tv={x:0,y:0,k:1};commit('拓樸圖重新自動排列')};
+  $('#tFit').onclick=()=>{fitTopo();renderTopo()};
+}
+function fitTopo(){
+  const svg=$('#topoSvg');const nodes=topoNodes();if(!nodes.length)return;
+  const defs=layoutDefault(nodes,Math.max(1500,svg.clientWidth));
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const d of nodes){const p=S.topo[d.id]||defs[d.id];x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x+NW);y1=Math.max(y1,p.y+NH)}
+  x0=Math.min(x0,0);y0=Math.min(y0,20);
+  const W=svg.clientWidth,H=svg.clientHeight;const k=Math.max(.35,Math.min(1.2,Math.min((W-40)/(x1-x0),(H-40)/(y1-y0))));
+  tv={k,x:(W-(x1-x0)*k)/2-x0*k,y:(H-(y1-y0)*k)/2-y0*k};
+}
+
+/* ───────── 數字跳動 ───────── */
+function countUp(el,to){const from=+el.dataset.v||0;el.dataset.v=to;if(from===to){el.textContent=to;return}const t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/500);el.textContent=Math.round(from+(to-from)*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+
 /* ───────── 面板 ───────── */
-function setTab(t){S.tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));renderPane()}
+function setTab(t){S.tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));renderPane();const p=$('#pane');p.classList.remove('swap');void p.offsetWidth;p.classList.add('swap')}
 function devPreview(d,face,maxW,maxH){
   const fs=Math.min(maxW/10.9,maxH/d.h,40);
   const w=d.side==='full'?10.9:5.45;
@@ -1174,10 +1587,10 @@ function renderList(p){
   });
   p.innerHTML=`<div class="sub" style="margin-bottom:8px">${rows.length} 筆${S.q||S.typeFilter?'（已套用篩選）':''}，點標題排序，點列定位到機櫃</div>
   <div style="overflow-x:auto"><table class="tbl"><thead><tr><th data-s="rack">位置</th><th data-s="name">名稱／型號</th><th data-s="type">類型</th></tr></thead><tbody>
-  ${rows.map(d=>`<tr data-id="${d.id}" class="${S.sel===d.id?'sel':''}"><td class="m">${d.rack} ${uRange(d)}<div class="sub">${FACE_LABEL[d.face]}</div></td><td><b>${esc(d.name)}</b>${d.model?`<div class="sub">${esc(d.model)}</div>`:''}${d.ip?`<div class="sub m">${esc(d.ip)}</div>`:''}</td><td><span class="pill"><i style="background:${TYPES[d.type]?.color}"></i>${esc(TYPES[d.type]?.label||d.type)}</span></td></tr>`).join('')}
+  ${rows.map((d,i)=>`<tr style="--i:${i}" data-id="${d.id}" class="${S.sel===d.id?'sel':''}"><td class="m">${d.rack} ${uRange(d)}<div class="sub">${FACE_LABEL[d.face]}</div></td><td><b>${esc(d.name)}</b>${d.model?`<div class="sub">${esc(d.model)}</div>`:''}${d.ip?`<div class="sub m">${esc(d.ip)}</div>`:''}</td><td><span class="pill"><i style="background:${TYPES[d.type]?.color}"></i>${esc(TYPES[d.type]?.label||d.type)}</span></td></tr>`).join('')}
   </tbody></table></div>`;
   p.querySelectorAll('th').forEach(th=>th.onclick=()=>{S.listSort=th.dataset.s;renderList(p)});
-  p.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>select(tr.dataset.id,true));
+  p.querySelectorAll('tr[data-id]').forEach(tr=>tr.onclick=()=>focusDevice(tr.dataset.id));
 }
 function freeRanges(rack,face){
   const occ=new Set();
@@ -1346,7 +1759,8 @@ function nudge(dir,shift){
 /* ───────── 提示框與 toast ───────── */
 const tip=$('#tip');
 function hoverTip(e){
-  const el=e.target.closest&&e.target.closest('.room .dev');
+  let el=e.target.closest&&e.target.closest('.room .dev');
+  if(!el&&S.mode==='3d'&&e.target.closest&&e.target.closest('.room'))el=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('dev')&&x.closest('.room'));
   if(!el){hideTip();return}
   const d=getDev(el.dataset.id);if(!d){hideTip();return}
   if(tip._id!==d.id+el.dataset.face){
@@ -1375,7 +1789,7 @@ function confirmBox(title,body,okText,fn,danger){
 let db=null,ref=null,writing=false,dirty=false,saveT=null,readOnly=false,lastWritten=null,downloads=null;
 const LS='t1-rack-v1';
 function setSync(state,text){const s=$('#sync');s.className='sync '+state;s.querySelector('span').textContent=text}
-function payload(){return {schema:1,devices:S.devices,log:S.log.slice(0,80),rev:rev,by:clientId,updatedAt:new Date().toISOString()}}
+function payload(){return {schema:1,devices:S.devices,links:S.links,topo:S.topo,log:S.log.slice(0,80),rev:rev,by:clientId,updatedAt:new Date().toISOString()}}
 function saveLocal(){try{localStorage.setItem(LS,JSON.stringify(payload()))}catch(_){}}
 function save(){
   saveLocal();
@@ -1397,13 +1811,13 @@ function applyRemote(data){
   if(!data||!Array.isArray(data.devices))return;
   if(data.by===clientId&&(data.rev+':'+data.by)===lastWritten)return;
   if(drag)return setTimeout(()=>applyRemote(data),400);
-  S.devices=clone(data.devices);S.log=clone(data.log||[]);rev=Math.max(rev,data.rev||0);
+  S.devices=clone(data.devices);S.links=clone(data.links||[]);S.topo=clone(data.topo||{});S.log=clone(data.log||[]);rev=Math.max(rev,data.rev||0);
   if(S.sel&&!getDev(S.sel))S.sel=null;
-  renderRacks();renderPane();saveLocal();
+  renderRacks();renderPane();if(cardId)renderCard();if(S.mode==='topo')renderTopo();saveLocal();
 }
 async function initStore(){
   // 先用本機暫存（若有），讓畫面立即可用
-  try{const raw=localStorage.getItem(LS);if(raw){const d=JSON.parse(raw);if(Array.isArray(d.devices)&&d.devices.length){S.devices=d.devices;S.log=d.log||[]}}}catch(_){}
+  try{const raw=localStorage.getItem(LS);if(raw){const d=JSON.parse(raw);if(Array.isArray(d.devices)&&d.devices.length){S.devices=d.devices;S.links=d.links||[];S.topo=d.topo||{};S.log=d.log||[]}}}catch(_){}
   renderRacks({initial:true});renderPane();
   let tries=0;
   while(!(window.claude&&window.claude.use)&&tries<15){await new Promise(r=>setTimeout(r,200));tries++}
@@ -1423,7 +1837,7 @@ async function initStore(){
 
 /* ───────── 匯出／匯入 ───────── */
 function exportJSON(){
-  const data={app:'T1 機房機櫃',schema:1,exportedAt:new Date().toISOString(),devices:S.devices,log:S.log};
+  const data={app:'T1 機房機櫃',schema:1,exportedAt:new Date().toISOString(),devices:S.devices,links:S.links,topo:S.topo,log:S.log};
   const json=JSON.stringify(data,null,2);
   const d=new Date();const fn=`T1機櫃_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.json`;
   if(downloads){downloads.save({filename:fn,data:json}).then(()=>toast('已匯出 '+fn)).catch(e=>{if(e&&e.code==='declined')return;showJSON(json)});return}
@@ -1441,7 +1855,7 @@ function importData(text){
   if(!Array.isArray(list)){toast('找不到設備清單（devices）',true);return}
   const clean=list.filter(x=>x&&TYPES[x.type]&&(x.rack==='A'||x.rack==='B')&&x.u>=1&&x.h>=1).map((x,i)=>Object.assign({id:x.id||('i'+i+Date.now().toString(36)),side:'full',face:TYPES[x.type].face,reversed:false,status:'online',ip:'',sn:'',notes:'',model:'',variant:Object.keys(TYPES[x.type].variants)[0],w:defaultW(x.type,x.h)},x));
   confirmBox('匯入設備清單',`<p style="margin:0">檔案內有 <b>${clean.length}</b> 筆有效設備${list.length!==clean.length?`（略過 ${list.length-clean.length} 筆格式不符）`:''}。匯入會取代目前兩座機櫃的內容，之後仍可按「復原」還原。</p>`,'取代並匯入',()=>{
-    snapshot();S.devices=clean;S.sel=null;commit(`匯入 ${clean.length} 筆設備`);toast(`已匯入 ${clean.length} 筆設備`);
+    snapshot();S.devices=clean;const ids=new Set(clean.map(x=>x.id));S.links=Array.isArray(data.links)?data.links.filter(l=>l&&ids.has(l.a)&&ids.has(l.b)):[];if(data.topo&&typeof data.topo==='object')S.topo=data.topo;S.sel=null;closeCard();commit(`匯入 ${clean.length} 筆設備、${S.links.length} 條連線`);toast(`已匯入 ${clean.length} 筆設備`);
   });
 }
 
@@ -1451,7 +1865,7 @@ function bind(){
   $('#scene').addEventListener('pointerdown',onDown);
   $('#scene').addEventListener('contextmenu',e=>{if(S.mode==='3d')e.preventDefault()});
   $('#scene').addEventListener('wheel',e=>{if(S.mode!=='3d')return;e.preventDefault();setZoomK(cam.k*Math.exp(-e.deltaY*.0012))},{passive:false});
-  $('#m2d').onclick=()=>setMode('2d');$('#m3d').onclick=()=>setMode('3d');
+  $('#m2d').onclick=()=>setMode('2d');$('#m3d').onclick=()=>setMode('3d');$('#mTopo').onclick=()=>setMode('topo');bindTopo();
   $('#tSpin').onclick=e=>{S.autorot=!S.autorot;e.currentTarget.setAttribute('aria-pressed',S.autorot)};
   $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.k=cam.kr=.68;cam.px=0;cam.py=0;fit();applyCam(true)};
   window.addEventListener('pointermove',onMove);
@@ -1459,7 +1873,7 @@ function bind(){
   window.addEventListener('pointercancel',()=>{if(drag){clearDrop();drag.float&&drag.float.remove();for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.remove('dragging')}drag=null}});
   room.addEventListener('pointerleave',hideTip);
   room.addEventListener('click',e=>{
-    if(orbMoved)return;
+    if(orbMoved||S.mode==='3d')return;
     const lb=e.target.closest('.lb');if(lb){select(lb.dataset.id);return}
     const slot=e.target.closest('.slot');if(slot){const bay=slot.closest('.bay');openAdd({rack:bay.dataset.rack,u:+slot.dataset.u});return}
   });
@@ -1467,7 +1881,7 @@ function bind(){
   $('#vFront').onclick=()=>setView('front');$('#vRear').onclick=()=>setView('rear');
   $('#addBtn').onclick=()=>openAdd({rack:(S.sel&&getDev(S.sel)?.rack)||'A'});
   $('#undoBtn').onclick=undo;
-  let qT;$('#q').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeout(()=>{S.q=e.target.value.trim();renderRacks();if(S.tab==='list')renderPane()},120)});
+  let qT;$('#q').addEventListener('input',e=>{clearTimeout(qT);qT=setTimeout(()=>{S.q=e.target.value.trim();renderRacks();if(S.tab==='list')renderPane();if(S.mode==='topo')renderTopo()},120)});
   $('#tLabels').onclick=e=>{S.labels=!S.labels;e.currentTarget.setAttribute('aria-pressed',S.labels);fit();pref()};
   $('#tDoor').onclick=e=>{S.door=!S.door;e.currentTarget.setAttribute('aria-pressed',S.door);$('#room').classList.toggle('doors-closed',S.door)};
   $('#tHeat').onclick=e=>{S.heat=!S.heat;e.currentTarget.setAttribute('aria-pressed',S.heat);$('#room').classList.toggle('heat',S.heat)};
@@ -1483,7 +1897,7 @@ function bind(){
     root.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>root.innerHTML='');
     root.querySelector('#pick').onclick=()=>$('#impFile').click();
     root.querySelector('#doImp').onclick=()=>{const v=root.querySelector('#jsonIn').value;root.innerHTML='';importData(v)};
-    root.querySelector('#resetSeed').onclick=()=>confirmBox('重設為原始盤點','<p style="margin:0">兩座機櫃會回到 2026/10/16 現場盤點的 45 筆設備，目前的調整會被取代（可按「復原」還原）。</p>','重設',()=>{snapshot();S.devices=seedDevices();S.sel=null;commit('重設為原始盤點清單');toast('已重設為原始盤點')},true);
+    root.querySelector('#resetSeed').onclick=()=>confirmBox('重設為原始盤點','<p style="margin:0">兩座機櫃會回到 2026/10/16 現場盤點的 45 筆設備，目前的調整會被取代（可按「復原」還原）。</p>','重設',()=>{snapshot();S.devices=seedDevices();S.links=[];S.topo={};S.sel=null;closeCard();commit('重設為原始盤點清單');toast('已重設為原始盤點')},true);
   };
   $('#impFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{$('#modalRoot').innerHTML='';importData(rd.result)};rd.readAsText(f);e.target.value=''};
   document.addEventListener('keydown',e=>{
@@ -1491,6 +1905,7 @@ function bind(){
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return}
     if(e.key==='v'||e.key==='V'){setView(S.view==='front'?'rear':'front');return}
     if(e.key==='Escape'){select(null);return}
+    if(S.mode==='topo')return;
     if(!S.sel&&S.mode==='3d'&&e.key.startsWith('Arrow')){e.preventDefault();if(e.key==='ArrowLeft')cam.yaw-=10;if(e.key==='ArrowRight')cam.yaw+=10;if(e.key==='ArrowUp')cam.pitch=Math.max(-80,cam.pitch-6);if(e.key==='ArrowDown')cam.pitch=Math.min(60,cam.pitch+6);applyCam(true);return}
     if(!S.sel)return;
     const d=getDev(S.sel);
@@ -1499,7 +1914,7 @@ function bind(){
     if(e.key==='f'||e.key==='F'){const o=['front','rear','both'];moveDev(d.id,{face:o[(o.indexOf(d.face)+1)%3]});return}
     if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();removeDev(d.id)}
   });
-  window.addEventListener('resize',()=>{clearTimeout(window._ft);window._ft=setTimeout(fit,80)});
+  window.addEventListener('resize',()=>{clearTimeout(window._ft);window._ft=setTimeout(()=>{fit();if(S.mode==='topo')renderTopo()},80)});
   // 類型篩選
   const used=[...new Set(S.devices.map(d=>d.type))];
   $('#typeChips').innerHTML=Object.keys(TYPES).filter(t=>['server','storage','switch','firewall','patch','pdu'].includes(t)).map(t=>`<button class="chip" data-type="${t}" aria-pressed="false"><i class="dot" style="background:${TYPES[t].color}"></i>${TYPES[t].label}</button>`).join('');
