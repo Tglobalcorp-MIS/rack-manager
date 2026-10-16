@@ -308,7 +308,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .outlet::before{left:28%}.outlet::after{right:28%}
 .outlet i{position:absolute;left:50%;bottom:16%;width:.09em;height:.09em;margin-left:-.045em;border-radius:50%;background:#2c3134}
 .pwrsw{width:.45em;height:.55em;border-radius:.06em;background:#e0302b;box-shadow:0 0 .25em rgba(255,60,50,.8),inset 0 -.12em 0 #9e1712;flex:none}
-.plug{position:absolute;width:.42em;height:.55em;background:#0c0d0e;border-radius:.06em;box-shadow:0 0 0 .02em #333}
+.outlet .plug{position:absolute;left:-.03em;right:-.03em;top:-.03em;bottom:-.03em;width:auto;height:auto;margin:0;border-radius:.09em;background:linear-gradient(#454a4e,#1c1f22 55%,#101214);box-shadow:0 .04em .08em rgba(0,0,0,.8),inset 0 0 0 .02em #5a6064,inset 0 .03em 0 rgba(255,255,255,.18);z-index:1}
+.outlet .plug::after{content:"";position:absolute;left:50%;top:100%;width:.16em;height:.3em;margin-left:-.08em;background:linear-gradient(90deg,#060607,#1f2224,#060607);border-radius:0 0 .05em .05em}
 /* 層板 */
 .shelf .tray{position:absolute;left:.42em;right:.42em;bottom:0;height:72%;background:linear-gradient(#3a3f43,#24282b);clip-path:polygon(4% 0,96% 0,100% 62%,100% 100%,0 100%,0 62%)}
 .shelf .tray::after{content:"";position:absolute;left:0;right:0;bottom:0;height:38%;background:linear-gradient(#1a1d20,#0e1012);box-shadow:inset 0 .02em 0 #50575b}
@@ -742,9 +743,10 @@ function buildFront(d){
     return `<div class="fp patch">${el}<div class="body" style="position:relative">${rows}${h>1?tag(nm,'right:2%;top:1%'):''}</div>${er}</div>`;
   }
   if(t==='pdu'){
-    const [el,er]=ears('p',1);let o='';for(let i=0;i<8;i++)o+='<i class="outlet"><i></i></i>';
-    let plugs='';for(let i=0;i<8;i++)if(r()<.45)plugs+=`<i class="plug" style="left:calc(${9.5+i*9.2}% );top:50%;transform:translateY(-50%)"></i>`;
-    return `<div class="fp pdu">${el}<div class="body" style="position:relative">${o}${plugs}<div style="flex:1"></div><i class="pwrsw"></i></div>${er}</div>`;
+    const [el,er]=ears('p',1);let o='';
+    // 插頭直接放在插座元素裡，位置永遠對齊插座
+    for(let i=0;i<8;i++)o+=r()<.45?'<i class="outlet"><i></i><i class="plug"></i></i>':'<i class="outlet"><i></i></i>';
+    return `<div class="fp pdu">${el}<div class="body">${o}<div style="flex:1"></div><i class="pwrsw"></i></div>${er}</div>`;
   }
   if(t==='shelf'){
     return `<div class="fp shelf"><i class="ear l"><i class="sc" style="top:50%;margin-top:-.1em"></i></i><div style="flex:1"></div><i class="ear r"><i class="sc" style="top:50%;margin-top:-.1em"></i></i><div class="tray"><i style="left:22%"></i><i style="right:22%"></i></div></div>`;
