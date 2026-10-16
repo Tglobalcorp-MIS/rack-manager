@@ -85,7 +85,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .floor{position:absolute;left:0;right:0;bottom:0;height:30%;pointer-events:none;
   background-image:linear-gradient(var(--floor-line) 1px,transparent 1px),linear-gradient(90deg,var(--floor-line) 1px,transparent 1px);
   background-size:120px 60px;background-position:center top;transform-origin:top;transform:perspective(500px) rotateX(55deg) scale(1.6,1);opacity:.9}
-.scene{position:relative;perspective:2600px;perspective-origin:50% 40%;display:flex;justify-content:center;padding:6px 16px 40px;min-width:max-content}
+.scene{position:relative;perspective:2600px;perspective-origin:50% 40%;display:flex;justify-content:center;padding:calc(var(--uh) * 1.4) 16px 40px;min-width:max-content}
 .room{position:relative;transform-style:preserve-3d;transition:transform 1.15s cubic-bezier(.65,.02,.25,1)}
 .room.rear{transform:rotateY(180deg)}
 .side{display:flex;align-items:flex-end;gap:calc(var(--uh)*.25);backface-visibility:hidden;-webkit-backface-visibility:hidden;transform-style:preserve-3d}
@@ -139,14 +139,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 .scene.mode3d.orbiting{cursor:grabbing}
 /* 轉動／縮放中：暫停其餘動畫，避免每一格都要重繪陰影與重新合成 */
 .scene.moving *,.scene.moving *::before,.scene.moving *::after{animation-play-state:paused!important}
-.is3d-ui .chip{backdrop-filter:none;background:color-mix(in srgb,var(--panel) 96%,transparent)}
+.is3d-ui .chip{backdrop-filter:none}
+.is3d-ui .chip:not([aria-pressed="true"]){background:color-mix(in srgb,var(--panel) 96%,transparent)}
 .scene.mode3d .room{transition:none}
 .scene.mode3d .room.anim{transition:transform .9s cubic-bezier(.6,.05,.3,1)}
 .scene.mode3d .block,.scene.mode3d .rackwrap,.scene.mode3d .cab{transform-style:preserve-3d}
 .side{transition:transform .9s cubic-bezier(.6,.05,.3,1)}
 .scene.mode3d .side.front{transform:translateZ(calc(var(--uh) * 11))}
 .scene.mode3d .side.back{transform:rotateY(180deg) translateZ(calc(var(--uh) * 11))}
-.scene.mode3d .rackhead{visibility:hidden}
+/* 標題字級固定為 px，若保留在 3D 版面中，縮放重繪時比例會跑掉、畫面跳動 */
+.scene.mode3d .rackhead{display:none}
 .scene.mode3d .cab::after{display:none}
 .scene.mode3d .dev{cursor:pointer}
 .scene.mode3d .wall{display:block;position:absolute;pointer-events:none;backface-visibility:visible}
@@ -312,10 +314,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 .led.b{background:#3ea7ff;box-shadow:0 0 .12em #3ea7ff,0 0 .3em rgba(62,167,255,.6)}
 .led.r{background:#ff3b3b;box-shadow:0 0 .12em #ff3b3b,0 0 .3em rgba(255,59,59,.6)}
 .led.dim{opacity:.18}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 @keyframes flick{0%,100%{opacity:1}10%{opacity:.2}20%{opacity:1}55%{opacity:.35}62%{opacity:1}}
 .st-off .led{background:#26302a!important;box-shadow:none!important;animation:none!important;opacity:1!important}
 .st-maint .led{background:#ffb627!important;box-shadow:0 0 .15em #ffb627!important}
+.st-alarm .led.stat{background:#ff3b3b!important;box-shadow:0 0 .14em #ff3b3b,0 0 .4em rgba(255,59,59,.75)!important}
+/* 狀態燈：每台設備只有一顆跑 CSS 動畫（綠＝呼吸、黃＝慢閃、紅＝快閃），其餘存取燈由計時器切換，避免數百個合成圖層 */
+.led.stat{animation:breath 3.4s ease-in-out infinite;animation-delay:var(--d,0s)}
+.st-maint .led.stat{animation:blink 1.4s steps(1,end) infinite}
+.st-alarm .led.stat{animation:blink .55s steps(1,end) infinite}
+.st-off .led.stat,.dev.ghost .led.stat,.room:not(.rear) .side.back .led.stat,.room.rear .side.front .led.stat{animation:none}
+@keyframes breath{0%,100%{opacity:1}50%{opacity:.42}}
 .st-off .screen{background:#050607!important}
 .st-off .screen *{visibility:hidden}
 .st-off .fanblade{animation-play-state:paused!important}
@@ -447,9 +456,22 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* 風扇 */
 .fanu .body{background:linear-gradient(#1a1d1f,#0d0e10);justify-content:space-evenly;align-items:center}
 .fan{position:relative;height:88%;aspect-ratio:1;border-radius:50%;background:#050607;box-shadow:0 0 0 .04em #3a4044;overflow:hidden}
-.fanblade{position:absolute;inset:6%;border-radius:50%;background:conic-gradient(#3b4146 0 14%,transparent 14% 20%,#3b4146 20% 34%,transparent 34% 40%,#3b4146 40% 54%,transparent 54% 60%,#3b4146 60% 74%,transparent 74% 80%,#3b4146 80% 94%,transparent 94%);animation:spin .5s linear infinite}
+.fanblade{position:absolute;inset:6%;border-radius:50%;background:conic-gradient(#3b4146 0 14%,transparent 14% 20%,#3b4146 20% 34%,transparent 34% 40%,#3b4146 40% 54%,transparent 54% 60%,#3b4146 60% 74%,transparent 74% 80%,#3b4146 80% 94%,transparent 94%);animation:spin calc(var(--fs,1.6s) * var(--fk,1)) linear infinite}
+.st-maint{--fk:.5}.st-alarm{--fk:.28}
+.st-alarm .fan{box-shadow:0 0 0 .03em rgba(255,70,70,.7),inset 0 0 .25em rgba(255,60,60,.55)}
 .fan::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#555b60 0 14%,transparent 15%),repeating-radial-gradient(circle,transparent 0 .1em,rgba(160,170,175,.5) .1em .12em);}
 @keyframes spin{to{transform:rotate(360deg)}}
+.kuai{position:absolute;bottom:calc(100% - .05em);right:9%;width:1.9em;height:2.45em;z-index:8;cursor:help;display:flex;flex-direction:column;transform-origin:50% 100%;transform:rotate(-4deg);filter:drop-shadow(0 .12em .12em rgba(0,0,0,.35));transition:transform .25s}
+.kuai:hover{transform:rotate(-4deg) translateY(-.15em) scale(1.06)}
+.kuai .kz{height:.22em;flex:none;background:linear-gradient(90deg,#3d9a3a,#62c45a 45%,#2f7f2d);-webkit-mask:linear-gradient(45deg,transparent 33%,#000 33% 67%,transparent 67%) 0 0/.22em .22em repeat-x;mask:conic-gradient(from -45deg at 50% 0,#000 90deg,transparent 0) 0 0/.24em 100%}
+.kuai .kz.t{-webkit-mask:none;mask:conic-gradient(from 135deg at 50% 100%,#000 90deg,transparent 0) 0 0/.24em 100%}
+.kuai .kb{flex:1;position:relative;border-radius:.12em .12em .16em .16em;background:linear-gradient(90deg,#24751f,#4fb646 30%,#6fd263 48%,#3e9e37 70%,#1f6a1b);box-shadow:inset 0 .3em .3em -.25em rgba(255,255,255,.45),inset 0 -.25em .3em -.2em rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:.32em;overflow:hidden}
+.kuai .kk{font-family:"Noto Sans TC",sans-serif;font-weight:900;font-size:.7em;line-height:1;color:#ffe14a;letter-spacing:-.04em;text-shadow:.04em 0 #c4161c,-.04em 0 #c4161c,0 .04em #c4161c,0 -.04em #c4161c,0 .09em 0 #8c0d10}
+.kuai .kf{margin-top:.25em;font-size:.2em;line-height:1;color:#fff;background:#c4161c;padding:.15em .4em;border-radius:1em;white-space:nowrap}
+.kuai .kc{position:absolute;bottom:.28em;left:50%;width:.95em;height:.6em;margin-left:-.475em;border-radius:50% 50% 45% 45%;background:radial-gradient(circle at 30% 40%,#fff 0 .06em,transparent .07em),radial-gradient(circle at 70% 40%,#fff 0 .06em,transparent .07em),radial-gradient(ellipse at 50% 30%,#f6d36b,#d79a2b);box-shadow:0 0 0 .04em rgba(0,0,0,.25)}
+.scene.mode3d .kuai{transform:translateZ(calc(var(--uh) * -3)) rotate(-4deg)}
+.scene.mode3d .kuai:hover{transform:translateZ(calc(var(--uh) * -3)) rotate(-4deg) translateY(-.15em) scale(1.06)}
+
 /* 理線 / 線材 */
 .brush .body{background:linear-gradient(#1b1e20,#0e1011);align-items:center;padding:0 .3em}
 .brush .slit{flex:1;height:.35em;border-radius:.05em;background:repeating-linear-gradient(90deg,#000 0 .02em,#2c3034 .02em .04em);box-shadow:inset 0 0 .06em #000}
@@ -699,7 +721,7 @@ const TYPES={
 const POWERED=new Set(['server','storage','switch','firewall','monitor','appliance','nvr','fan']);
 const FACE_LABEL={front:'前側',rear:'後側',both:'前後全深'};
 const SIDE_LABEL={full:'滿寬',left:'左半',right:'右半'};
-const STATUS={online:{t:'運作中',c:'var(--ok)'},maint:{t:'維護中',c:'var(--warn)'},off:{t:'關機／離線',c:'var(--muted)'}};
+const STATUS={online:{t:'運作中',c:'var(--ok)'},maint:{t:'維護中',c:'var(--warn)'},alarm:{t:'告警／異常',c:'var(--bad)'},off:{t:'關機／離線',c:'var(--muted)'}};
 
 /* ───────── 原始盤點（2026/10/16，依現場清單與照片） ───────── */
 const SEED=[
@@ -892,7 +914,7 @@ function buildFront(d){
   }
   if(t==='fan'){
     const [el,er]=ears('f',1);
-    let f='';for(let i=0;i<4;i++)f+=`<i class="fan"><i class="fanblade" style="animation-duration:${(.35+r()*.2).toFixed(2)}s"></i></i>`;
+    let f='';for(let i=0;i<4;i++)f+=`<i class="fan"><i class="fanblade" style="--fs:${(1.3+r()*.6).toFixed(2)}s"></i></i>`;
     return `<div class="fp fanu">${el}<div class="body">${f}</div>${er}</div>`;
   }
   if(t==='cable'){
@@ -950,6 +972,8 @@ function heatColor(d){
 /* ───────── 機櫃骨架 ───────── */
 const devEls=new Map();
 const bayEls={};
+/* 彩蛋：機房必備的綠色乖乖（放在 A 機櫃頂上） */
+const KUAI=`<div class="kuai" aria-label="綠色乖乖"><i class="kz t"></i><div class="kb"><span class="kk">乖乖</span><span class="kf">椰子口味</span><i class="kc"></i></div><i class="kz b"></i></div>`;
 function buildRooms(){
   const make=(rack,face)=>{
     const labelsLeft=(face==='front')===(rack==='A');
@@ -961,7 +985,7 @@ function buildRooms(){
         <div class="cab-body"><div class="post">${un}</div>
           <div class="bay" data-rack="${rack}" data-face="${face}"><i class="rail l"></i><i class="rail r"></i><div class="slots">${slots}</div><div class="devs"></div></div>
           <div class="post">${un}</div></div>
-        <div class="door"></div>${face==='front'?'<i class="wall l"></i><i class="wall r"></i><i class="wall t"></i><i class="wall b"></i>':''}
+        <div class="door"></div>${face==='front'&&rack==='A'?KUAI:''}${face==='front'?'<i class="wall l"></i><i class="wall r"></i><i class="wall t"></i><i class="wall b"></i>':''}
         <div class="cab-base"></div></div></div>`;
     return `<div class="block" data-rack="${rack}" data-face="${face}">${labelsLeft?lbl+rackHTML:rackHTML+lbl}</div>`;
   };
@@ -994,7 +1018,8 @@ function renderRacks(opts={}){ledEls=null;
       const sig=[d.type,d.variant,d.h,d.name,d.model,d.ip,d.reversed,vis,d.status].join('¦');
       if(!el){el=document.createElement('div');el.dataset.id=d.id;el.dataset.face=face;el.tabIndex=vis?0:-1;container.appendChild(el);devEls.set(key,el);if(!opts.initial)el.classList.add('enter')}
       else if(el.parentNode!==container){container.appendChild(el);el.classList.remove('enter');void el.offsetWidth;el.classList.add('enter')}
-      if(el._sig!==sig){el.innerHTML=vis?faceHTML(d,face):`<div class="fp"><span class="gt">${esc(d.name)}・${face==='rear'?'前側設備背板':'後側設備'}</span></div>`;el._sig=sig}
+      if(el._sig!==sig){el.innerHTML=vis?faceHTML(d,face):`<div class="fp"><span class="gt">${esc(d.name)}・${face==='rear'?'前側設備背板':'後側設備'}</span></div>`;el._sig=sig;
+        const st=vis&&el.querySelector('.led:not(.blink):not(.flick)');if(st)st.classList.add('stat')}
       el.style.setProperty('--u',d.u);el.style.setProperty('--h',d.h);
       el.style.setProperty('--heat',heatColor(d));
       el.style.setProperty('--bd',((42-d.u)*0.04).toFixed(2)+'s');
@@ -1140,32 +1165,44 @@ function setView(v){
 
 /* ───────── 3D 視角 ───────── */
 const cam={yaw:-30,pitch:-14,k:.68,kr:.68,px:0,py:0};
+/* 視角最低只到略高於水平，不會鑽到地板下方；接近水平時地板淡出，避免擋住機櫃 */
+const PITCH_MAX=-1;
 let zoomT=0,camRaf=0,moveT=0;
 /* 滾輪、拖曳事件可能一格畫面內來好幾次，只記下目標值，每格畫面最多套用一次 */
 function queueCam(){if(!camRaf)camRaf=requestAnimationFrame(()=>{camRaf=0;applyCam()})}
 /* 手勢進行中標記 moving：燈號與其他動畫暫停，讓每格只需重新合成 */
 function markMoving(){
   const sc=$('#scene');if(!sc.classList.contains('moving'))sc.classList.add('moving');
-  clearTimeout(moveT);moveT=setTimeout(()=>{if(!orb)sc.classList.remove('moving')},320);
+  clearTimeout(moveT);moveT=setTimeout(()=>{if(!orb){sc.classList.remove('moving');syncView()}},320);
 }
 /* 縮放手勢進行中先用 GPU 縮放（流暢），停手 300ms 後再以新尺寸重新繪製一次（清晰） */
 function setZoomK(k){
   cam.k=Math.max(.2,Math.min(5,k));queueCam();markMoving();
-  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,300);
+  clearTimeout(zoomT);zoomT=setTimeout(commitZoom,420);
 }
 function commitZoom(){
   if(orb&&orb.pinch){zoomT=setTimeout(commitZoom,300);return}
-  if(Math.abs(cam.kr-cam.k)<.002)return;cam.kr=cam.k;fit();applyCam();
+  // 縮小時 GPU 縮放本來就清晰，只有縮小很多才重繪；放大超過 6% 才重繪成清晰版本，慢慢縮放時就不會每一格都重排
+  const ratio=cam.k/cam.kr;if(ratio<1.06&&ratio>.6)return;
+  cam.kr=cam.k;fit();applyCam();
 }
 let orb=null,orbMoved=false;const ptrs=new Map();
 function applyCam(anim){
   const r=$('#room');
   if(S.mode!=='3d'){r.style.transform='';return}
   r.classList.toggle('anim',!!anim);
-  r.style.transform=`translate3d(${cam.px}px,${cam.py}px,0) scale(${(cam.k/cam.kr).toFixed(4)}) rotateX(${cam.pitch}deg) rotateY(${cam.yaw}deg)`;
-  const y=((cam.yaw%360)+360)%360;const rear=y>90&&y<270;
-  if(rear!==(S.view==='rear')){setView._fromCam=true;setView(rear?'rear':'front');setView._fromCam=false}
+  /* 預覽縮放要連深度一起縮（scale3d），才會和停手後的重繪完全一致，不會跳動 */
+  r.style.transform=`translate3d(${cam.px}px,${cam.py}px,0) scale3d(${(cam.k/cam.kr).toFixed(4)},${(cam.k/cam.kr).toFixed(4)},${(cam.k/cam.kr).toFixed(4)}) rotateX(${cam.pitch}deg) rotateY(${cam.yaw}deg)`;
+  const fl=r.querySelector('.floor3d');if(fl){const o=Math.max(.12,Math.min(1,(-cam.pitch-1)/9));fl.style.opacity=o<1?o.toFixed(2):''}
+  /* 自由旋轉時只更新正面／背面按鈕（加 20° 遲滯，在 90° 附近不會來回跳）；
+     真正切換檢視狀態要等停手後才做，轉圈圈時不會反覆重算整座機櫃的樣式 */
+  const y=((cam.yaw%360)+360)%360;
+  if(!camRear&&y>100&&y<260)camRear=true;else if(camRear&&(y<80||y>280))camRear=false;
+  $('#vFront').setAttribute('aria-pressed',!camRear);$('#vRear').setAttribute('aria-pressed',camRear);
+  if(!$('#scene').classList.contains('moving'))syncView();
 }
+let camRear=false;
+function syncView(){if(S.mode==='3d'&&(S.view==='rear')!==camRear){setView._fromCam=true;setView(camRear?'rear':'front');setView._fromCam=false}}
 function setMode(m){
   const topo=m==='topo';
   $('#topo').hidden=!topo;$('#scene').hidden=topo;$('#tools').hidden=topo;$('#stage').classList.toggle('is-topo',topo);
@@ -1202,7 +1239,7 @@ function orbitMove(e){
   const dx=e.clientX-orb.x,dy=e.clientY-orb.y;
   if(!orb.moved){if(Math.hypot(dx,dy)<4)return;orb.moved=true;orbMoved=true;$('#scene').classList.add('orbiting');hideTip()}
   if(orb.pan){cam.px=orb.px+dx;cam.py=orb.py+dy}
-  else{cam.yaw=orb.yaw+dx*.35;cam.pitch=Math.max(-80,Math.min(60,orb.pitch-dy*.3))}
+  else{cam.yaw=orb.yaw+dx*.35;cam.pitch=Math.max(-80,Math.min(PITCH_MAX,orb.pitch-dy*.3))}
   markMoving();queueCam();
 }
 function orbitUp(e){
@@ -1540,7 +1577,7 @@ function renderInfo(p){
     <h3>鍵盤快速鍵</h3>
     <div class="keys-help"><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>上下移動 1U</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>移到左邊／右邊的機櫃</span><span><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd></span><span>半寬設備靠左／靠右</span><span><kbd>F</kbd></span><span>切換安裝面（前側／後側／全深）</span><span><kbd>V</kbd></span><span>翻轉檢視正面／背面</span><span>3D 滑鼠</span><span>拖曳旋轉、右鍵或 Shift 拖曳平移、滾輪縮放；未選取設備時方向鍵也能轉動視角</span><span><kbd>Delete</kbd></span><span>刪除選取的設備</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>復原</span><span><kbd>Esc</kbd></span><span>取消選取</span></div>
     <h3>圖例</h3>
-    <div class="keys-help"><span><span class="pill"><i style="background:var(--ok)"></i>運作中</span></span><span>綠燈恆亮、存取燈閃爍</span><span><span class="pill"><i style="background:var(--warn)"></i>維護中</span></span><span>指示燈改為琥珀色閃爍</span><span><span class="pill"><i style="background:var(--muted)"></i>關機</span></span><span>指示燈熄滅、風扇停止</span><span><span class="pill" style="border-style:dashed">斜紋</span></span><span>另一面的設備（例如從背面看到前側設備的背板）</span></div>`;
+    <div class="keys-help"><span><span class="pill"><i style="background:var(--ok)"></i>運作中</span></span><span>狀態燈綠色呼吸、存取燈閃爍</span><span><span class="pill"><i style="background:var(--warn)"></i>維護中</span></span><span>狀態燈黃色閃爍、風扇加速</span><span><span class="pill"><i style="background:var(--bad)"></i>告警</span></span><span>狀態燈紅色快閃、風扇全速</span><span><span class="pill"><i style="background:var(--muted)"></i>關機</span></span><span>指示燈熄滅、風扇停止</span><span><span class="pill" style="border-style:dashed">斜紋</span></span><span>另一面的設備（例如從背面看到前側設備的背板）</span></div>`;
     return;
   }
   const T=TYPES[d.type]||{label:d.type,variants:{}};
@@ -1785,6 +1822,9 @@ function nudge(dir,shift){
 /* ───────── 提示框與 toast ───────── */
 const tip=$('#tip');
 function hoverTip(e){
+  const hitK=(e.target.closest&&e.target.closest('.kuai'))||(S.mode==='3d'&&e.target.closest&&e.target.closest('.room')&&document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('kuai')));
+  if(hitK){if(tip._id!=='kuai'){tip.innerHTML='<b>綠色乖乖</b><div>乖乖保佑設備穩定運作中</div><div class="m">機房傳統：請勿拆封，過期記得換新</div>';tip._id='kuai'}
+    const x=Math.min(window.innerWidth-270,e.clientX+16),y=Math.min(window.innerHeight-tip.offsetHeight-10,e.clientY+14);tip.style.left=x+'px';tip.style.top=y+'px';tip.classList.add('on');return}
   let el=e.target.closest&&e.target.closest('.room .dev');
   if(!el&&S.mode==='3d'&&e.target.closest&&e.target.closest('.room'))el=document.elementsFromPoint(e.clientX,e.clientY).find(x=>x.classList&&x.classList.contains('dev')&&x.closest('.room'));
   if(!el){hideTip();return}
@@ -1932,7 +1972,7 @@ function bind(){
     if(e.key==='v'||e.key==='V'){setView(S.view==='front'?'rear':'front');return}
     if(e.key==='Escape'){select(null);return}
     if(S.mode==='topo')return;
-    if(!S.sel&&S.mode==='3d'&&e.key.startsWith('Arrow')){e.preventDefault();if(e.key==='ArrowLeft')cam.yaw-=10;if(e.key==='ArrowRight')cam.yaw+=10;if(e.key==='ArrowUp')cam.pitch=Math.max(-80,cam.pitch-6);if(e.key==='ArrowDown')cam.pitch=Math.min(60,cam.pitch+6);applyCam(true);return}
+    if(!S.sel&&S.mode==='3d'&&e.key.startsWith('Arrow')){e.preventDefault();if(e.key==='ArrowLeft')cam.yaw-=10;if(e.key==='ArrowRight')cam.yaw+=10;if(e.key==='ArrowUp')cam.pitch=Math.max(-80,cam.pitch-6);if(e.key==='ArrowDown')cam.pitch=Math.min(PITCH_MAX,cam.pitch+6);applyCam(true);return}
     if(!S.sel)return;
     const d=getDev(S.sel);
     const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
