@@ -130,6 +130,36 @@ button,input,select,textarea{font:inherit;color:inherit}
 .door::after{content:"";position:absolute;right:.35em;top:45%;width:.22em;height:2.4em;border-radius:.1em;background:linear-gradient(90deg,#9aa0a3,#e0e4e6,#8a9093)}
 .doors-closed .door{transform:none;opacity:1;transition:transform 1s cubic-bezier(.6,.05,.3,1),opacity .1s}
 
+/* ── 3D 模式 ── */
+.wall,.floor3d{display:none}
+.stage.is3d{overflow:hidden}
+.stage.is3d .floor{display:none}
+.scene.mode3d{height:100%;min-width:0;align-items:center;perspective:2400px;perspective-origin:50% 45%;padding:0;overflow:hidden;cursor:grab;touch-action:none;user-select:none}
+.scene.mode3d.orbiting{cursor:grabbing}
+.scene.mode3d .room{transition:none}
+.scene.mode3d .room.anim{transition:transform .9s cubic-bezier(.6,.05,.3,1)}
+.scene.mode3d .block,.scene.mode3d .rackwrap,.scene.mode3d .cab{transform-style:preserve-3d}
+.side{transition:transform .9s cubic-bezier(.6,.05,.3,1)}
+.scene.mode3d .side.front{transform:translateZ(calc(var(--uh) * 11))}
+.scene.mode3d .side.back{transform:rotateY(180deg) translateZ(calc(var(--uh) * 11))}
+.scene.mode3d .rackhead{visibility:hidden}
+.scene.mode3d .cab::after{display:none}
+.scene.mode3d .dev{cursor:pointer}
+.scene.mode3d .wall{display:block;position:absolute;pointer-events:none;backface-visibility:visible}
+.wall.l,.wall.r{top:0;bottom:0;width:22em;background:linear-gradient(90deg,#0b0d0e,#1a1e21 3%,#15181a 50%,#1a1e21 97%,#0b0d0e),#111;box-shadow:inset 0 0 0 .08em #050606}
+.wall.l::after,.wall.r::after{content:"";position:absolute;inset:8% 10%;border-radius:.2em;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 30%,rgba(0,0,0,.25));box-shadow:inset 0 0 0 .05em rgba(255,255,255,.04)}
+.wall.l{left:0;transform-origin:0 50%;transform:rotateY(90deg)}
+.wall.r{right:0;transform-origin:100% 50%;transform:rotateY(-90deg)}
+.wall.t,.wall.b{left:0;right:0;height:22em}
+.wall.t{top:0;transform-origin:50% 0;transform:rotateX(-90deg);background:repeating-linear-gradient(90deg,#0b0c0d 0 .5em,#181b1d .5em .62em),#121416;box-shadow:inset 0 0 0 .1em #24292c}
+.wall.b{bottom:0;transform-origin:50% 100%;transform:rotateX(90deg);background:#0a0b0c}
+.scene.mode3d .floor3d{display:block;position:absolute;left:-90%;right:-90%;bottom:calc(var(--uh) * -.75);height:calc(var(--uh) * 120);transform-origin:50% 100%;transform:translateZ(calc(var(--uh) * 60)) rotateX(90deg);pointer-events:none;
+  background-color:var(--floor-1);background-image:linear-gradient(var(--floor-line) 2px,transparent 2px),linear-gradient(90deg,var(--floor-line) 2px,transparent 2px),radial-gradient(closest-side,rgba(0,0,0,.18),transparent);background-size:calc(var(--uh) * 6) calc(var(--uh) * 6),calc(var(--uh) * 6) calc(var(--uh) * 6),100% 100%}
+.only3d{display:none!important}
+.is3d-ui .only3d{display:inline-flex!important}
+.is3d-ui .only2d{display:none!important}
+.hint3d{font-size:12px;color:var(--muted);background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);padding:4px 10px;border-radius:999px;white-space:nowrap}
+
 /* 標籤欄 */
 .labels{position:relative;width:var(--lw,150px);align-self:stretch}
 .labels-in{position:absolute;left:0;right:0;bottom:1.7em;height:42em}
@@ -470,6 +500,10 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
     </div>
     <div class="stats" id="stats"></div>
     <div class="spacer"></div>
+    <div class="seg" role="group" aria-label="2D 或 3D">
+      <button id="m2d" aria-pressed="false">2D</button>
+      <button id="m3d" aria-pressed="true">3D</button>
+    </div>
     <div class="seg" role="group" aria-label="檢視面">
       <button id="vFront" aria-pressed="true">正面</button>
       <button id="vRear" aria-pressed="false">背面</button>
@@ -486,9 +520,12 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
     <section class="stage" id="stage">
       <div class="floor" aria-hidden="true"></div>
       <div class="stage-tools" id="tools">
-        <button class="chip" id="tLabels" aria-pressed="true">名稱標示</button>
+        <button class="chip only2d" id="tLabels" aria-pressed="true">名稱標示</button>
         <button class="chip" id="tDoor" aria-pressed="false">機櫃門</button>
         <button class="chip" id="tHeat" aria-pressed="false">熱力分布</button>
+        <button class="chip only3d" id="tSpin" aria-pressed="false">自動旋轉</button>
+        <button class="chip only3d" id="tReset">重設視角</button>
+        <span class="hint3d only3d">拖曳旋轉・右鍵或 Shift 拖曳平移・滾輪縮放</span>
         <span class="zoom"><label for="zoomR">縮放</label><input id="zoomR" type="range" min="10" max="40" step="1" value="20"><button class="chip" id="zoomAuto" aria-pressed="true" style="padding:1px 8px">自動</button></span>
         <span id="typeChips" style="display:contents"></span>
       </div>
@@ -496,6 +533,7 @@ textarea.json{width:100%;min-height:260px;font-family:var(--f-mono);font-size:12
         <div class="room" id="room">
           <div class="side front" id="sideFront"></div>
           <div class="side back" id="sideBack"></div>
+          <div class="floor3d" aria-hidden="true"></div>
         </div>
       </div>
     </section>
@@ -603,7 +641,7 @@ function seedDevices(){
 function defaultW(type,h){const t=TYPES[type];if(!t)return 0;if(type==='server')return h>=2?450:250;return t.w}
 
 /* ───────── 狀態 ───────── */
-const S={devices:seedDevices(),log:[],view:'front',sel:null,q:'',typeFilter:null,labels:true,door:false,heat:false,zoom:null,tab:'info',listSort:'rack'};
+const S={mode:'2d',autorot:false,devices:seedDevices(),log:[],view:'front',sel:null,q:'',typeFilter:null,labels:true,door:false,heat:false,zoom:null,tab:'info',listSort:'rack'};
 const clientId=Math.random().toString(36).slice(2,10);
 let history=[],rev=0,remoteExists=null;
 
@@ -805,7 +843,7 @@ function buildRooms(){
         <div class="cab-body"><div class="post">${un}</div>
           <div class="bay" data-rack="${rack}" data-face="${face}"><i class="rail l"></i><i class="rail r"></i><div class="slots">${slots}</div><div class="devs"></div></div>
           <div class="post">${un}</div></div>
-        <div class="door"></div>
+        <div class="door"></div>${face==='front'?'<i class="wall l"></i><i class="wall r"></i><i class="wall t"></i><i class="wall b"></i>':''}
         <div class="cab-base"></div></div></div>`;
     return `<div class="block" data-rack="${rack}" data-face="${face}">${labelsLeft?lbl+rackHTML:rackHTML+lbl}</div>`;
   };
@@ -881,7 +919,7 @@ function renderStats(){
 function fit(){
   const stage=$('#stage');const st=stage.getBoundingClientRect();
   const narrow=window.innerWidth<=1000;
-  const lw=S.labels&&st.width>720?Math.min(160,Math.max(110,st.width*.12)):0;
+  const lw=S.mode!=='3d'&&S.labels&&st.width>720?Math.min(160,Math.max(110,st.width*.12)):0;
   document.documentElement.style.setProperty('--lw',lw+'px');
   $('#scene').classList.toggle('nolabels',!lw);
   let uh;
@@ -889,7 +927,8 @@ function fit(){
   else{
     const uhW=(st.width-40-2*lw)/27.6;
     const uhH=(st.height-130)/46.6;
-    uh=narrow?uhW:Math.min(uhW,uhH);
+    uh=narrow&&S.mode!=='3d'?uhW:Math.min(uhW,uhH);
+    if(S.mode==='3d')uh*=.92;
     uh=Math.max(9,Math.min(34,Math.floor(uh*2)/2));
     $('#zoomR').value=Math.round(uh);
   }
@@ -970,9 +1009,61 @@ function select(id,scroll){
   if(id&&scroll){const el=devEls.get(id+'|'+(isVisible(getDev(id),S.view)?S.view:(S.view==='front'?'rear':'front')));if(el&&!isVisible(getDev(id),S.view))setView(S.view==='front'?'rear':'front');el&&el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'})}
 }
 function setView(v){
+  if(S.mode==='3d'&&!setView._fromCam){
+    const target=v==='rear'?180:0;let d=((target-cam.yaw)%360+540)%360-180;
+    cam.yaw+=d;cam.pitch=-10;cam.px=0;cam.py=0;applyCam(true);return;
+  }
   S.view=v;$('#room').classList.toggle('rear',v==='rear');
   $('#vFront').setAttribute('aria-pressed',v==='front');$('#vRear').setAttribute('aria-pressed',v==='rear');
 }
+
+/* ───────── 3D 視角 ───────── */
+const cam={yaw:-30,pitch:-14,zoom:.74,px:0,py:0};
+let orb=null,orbMoved=false;const ptrs=new Map();
+function applyCam(anim){
+  const r=$('#room');
+  if(S.mode!=='3d'){r.style.transform='';return}
+  r.classList.toggle('anim',!!anim);
+  r.style.transform=`translate3d(${cam.px}px,${cam.py}px,0) scale(${cam.zoom}) rotateX(${cam.pitch}deg) rotateY(${cam.yaw}deg)`;
+  const y=((cam.yaw%360)+360)%360;const rear=y>90&&y<270;
+  if(rear!==(S.view==='rear')){setView._fromCam=true;setView(rear?'rear':'front');setView._fromCam=false}
+}
+function setMode(m){
+  S.mode=m;
+  $('#scene').classList.toggle('mode3d',m==='3d');$('#stage').classList.toggle('is3d',m==='3d');
+  document.body.classList.toggle('is3d-ui',m==='3d');
+  $('#m2d').setAttribute('aria-pressed',m==='2d');$('#m3d').setAttribute('aria-pressed',m==='3d');
+  if(m==='3d'){cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.px=0;cam.py=0;requestAnimationFrame(()=>applyCam(true))}
+  else{const r=$('#room');r.style.transform='';r.classList.remove('anim');S.autorot=false;$('#tSpin').setAttribute('aria-pressed','false')}
+  fit();
+  try{localStorage.setItem('t1-rack-mode',m)}catch(_){}
+}
+function orbitDown(e){
+  ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(ptrs.size===2){const [a,b]=[...ptrs.values()];orb={pinch:Math.hypot(a.x-b.x,a.y-b.y),zoom:cam.zoom,moved:true};orbMoved=true;return}
+  const el=e.target.closest('.dev');
+  orb={x:e.clientX,y:e.clientY,yaw:cam.yaw,pitch:cam.pitch,px:cam.px,py:cam.py,pan:e.button===2||e.shiftKey||e.button===1,moved:false,devId:el&&el.dataset.id,pid:e.pointerId};
+  orbMoved=false;
+  try{$('#scene').setPointerCapture(e.pointerId)}catch(_){}
+}
+function orbitMove(e){
+  if(ptrs.has(e.pointerId))ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(orb&&orb.pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()];cam.zoom=Math.max(.3,Math.min(3,orb.zoom*Math.hypot(a.x-b.x,a.y-b.y)/orb.pinch));applyCam();return}
+  if(!orb||orb.pinch)return;
+  const dx=e.clientX-orb.x,dy=e.clientY-orb.y;
+  if(!orb.moved){if(Math.hypot(dx,dy)<4)return;orb.moved=true;orbMoved=true;$('#scene').classList.add('orbiting');hideTip()}
+  if(orb.pan){cam.px=orb.px+dx;cam.py=orb.py+dy}
+  else{cam.yaw=orb.yaw+dx*.35;cam.pitch=Math.max(-80,Math.min(60,orb.pitch-dy*.3))}
+  applyCam();
+}
+function orbitUp(e){
+  ptrs.delete(e.pointerId);
+  if(!orb)return;
+  const o=orb;orb=null;$('#scene').classList.remove('orbiting');
+  if(!o.moved&&o.devId)select(o.devId);
+  setTimeout(()=>{orbMoved=false},0);
+}
+function spinLoop(){if(S.autorot&&!orb&&S.mode==='3d'){cam.yaw+=.18;applyCam()}requestAnimationFrame(spinLoop)}
 
 /* ───────── 面板 ───────── */
 function setTab(t){S.tab=t;document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));renderPane()}
@@ -997,9 +1088,9 @@ function renderInfo(p){
   if(!d){
     const total=S.devices.length;const free=84-usedU('A').size-usedU('B').size;
     p.innerHTML=`<h2>T1 機房</h2><div class="sub">共 ${total} 筆設備，剩餘 ${free}U 空位</div>
-    <div class="hint" style="margin-top:14px">點一下機櫃裡的設備即可檢視與編輯；按住拖曳可上下移動或拖到另一座機櫃。點空的 U 位可在該位置新增設備。</div>
+    <div class="hint" style="margin-top:14px">點一下機櫃裡的設備即可檢視與編輯。2D 模式下按住設備拖曳可上下移動或拖到另一座機櫃；3D 模式下拖曳用來轉動視角，移動設備請用右側的位置控制或方向鍵。點空的 U 位可在該位置新增設備。</div>
     <h3>鍵盤快速鍵</h3>
-    <div class="keys-help"><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>上下移動 1U</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>移到左邊／右邊的機櫃</span><span><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd></span><span>半寬設備靠左／靠右</span><span><kbd>F</kbd></span><span>切換安裝面（前側／後側／全深）</span><span><kbd>V</kbd></span><span>翻轉檢視正面／背面</span><span><kbd>Delete</kbd></span><span>刪除選取的設備</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>復原</span><span><kbd>Esc</kbd></span><span>取消選取</span></div>
+    <div class="keys-help"><span><kbd>↑</kbd> <kbd>↓</kbd></span><span>上下移動 1U</span><span><kbd>←</kbd> <kbd>→</kbd></span><span>移到左邊／右邊的機櫃</span><span><kbd>Shift</kbd>+<kbd>←</kbd><kbd>→</kbd></span><span>半寬設備靠左／靠右</span><span><kbd>F</kbd></span><span>切換安裝面（前側／後側／全深）</span><span><kbd>V</kbd></span><span>翻轉檢視正面／背面</span><span>3D 滑鼠</span><span>拖曳旋轉、右鍵或 Shift 拖曳平移、滾輪縮放；未選取設備時方向鍵也能轉動視角</span><span><kbd>Delete</kbd></span><span>刪除選取的設備</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd></span><span>復原</span><span><kbd>Esc</kbd></span><span>取消選取</span></div>
     <h3>圖例</h3>
     <div class="keys-help"><span><span class="pill"><i style="background:var(--ok)"></i>運作中</span></span><span>綠燈恆亮、存取燈閃爍</span><span><span class="pill"><i style="background:var(--warn)"></i>維護中</span></span><span>指示燈改為琥珀色閃爍</span><span><span class="pill"><i style="background:var(--muted)"></i>關機</span></span><span>指示燈熄滅、風扇停止</span><span><span class="pill" style="border-style:dashed">斜紋</span></span><span>另一面的設備（例如從背面看到前側設備的背板）</span></div>`;
     return;
@@ -1165,6 +1256,7 @@ function openAdd(pre={}){
 /* ───────── 拖曳 ───────── */
 let drag=null;
 function onDown(e){
+  if(S.mode==='3d'){if(e.target.closest('.stage-tools'))return;orbitDown(e);return}
   const el=e.target.closest('.dev');if(!el||!el.dataset.id||e.button>0)return;
   if(el.closest('.preview'))return;
   const d=getDev(el.dataset.id);if(!d)return;
@@ -1173,6 +1265,7 @@ function onDown(e){
   el.setPointerCapture(e.pointerId);
 }
 function onMove(e){
+  if(S.mode==='3d'&&(orb||ptrs.size)){orbitMove(e);return}
   if(!drag){hoverTip(e);return}
   const dx=e.clientX-drag.startX,dy=e.clientY-drag.startY;
   if(!drag.moved){if(Math.hypot(dx,dy)<5)return;drag.moved=true;startFloat();hideTip()}
@@ -1207,6 +1300,7 @@ function startFloat(){
 }
 function clearDrop(){if(drag&&drag.drop){drag.drop.remove();drag.drop=null}}
 function onUp(e){
+  if(S.mode==='3d'){orbitUp(e);return}
   if(!drag)return;
   const dd=drag;drag=null;
   try{dd.el.releasePointerCapture(dd.pid)}catch(_){}
@@ -1345,12 +1439,18 @@ function importData(text){
 /* ───────── 事件 ───────── */
 function bind(){
   const room=$('#room');
-  room.addEventListener('pointerdown',onDown);
+  $('#scene').addEventListener('pointerdown',onDown);
+  $('#scene').addEventListener('contextmenu',e=>{if(S.mode==='3d')e.preventDefault()});
+  $('#scene').addEventListener('wheel',e=>{if(S.mode!=='3d')return;e.preventDefault();cam.zoom=Math.max(.3,Math.min(3,cam.zoom*Math.exp(-e.deltaY*.0012)));applyCam()},{passive:false});
+  $('#m2d').onclick=()=>setMode('2d');$('#m3d').onclick=()=>setMode('3d');
+  $('#tSpin').onclick=e=>{S.autorot=!S.autorot;e.currentTarget.setAttribute('aria-pressed',S.autorot)};
+  $('#tReset').onclick=()=>{cam.yaw=(S.view==='rear'?180:0)-30;cam.pitch=-14;cam.zoom=.74;cam.px=0;cam.py=0;applyCam(true)};
   window.addEventListener('pointermove',onMove);
   window.addEventListener('pointerup',onUp);
   window.addEventListener('pointercancel',()=>{if(drag){clearDrop();drag.float&&drag.float.remove();for(const fc of ['front','rear']){const x=devEls.get(drag.id+'|'+fc);x&&x.classList.remove('dragging')}drag=null}});
   room.addEventListener('pointerleave',hideTip);
   room.addEventListener('click',e=>{
+    if(orbMoved)return;
     const lb=e.target.closest('.lb');if(lb){select(lb.dataset.id);return}
     const slot=e.target.closest('.slot');if(slot){const bay=slot.closest('.bay');openAdd({rack:bay.dataset.rack,u:+slot.dataset.u});return}
   });
@@ -1382,6 +1482,7 @@ function bind(){
     if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();return}
     if(e.key==='v'||e.key==='V'){setView(S.view==='front'?'rear':'front');return}
     if(e.key==='Escape'){select(null);return}
+    if(!S.sel&&S.mode==='3d'&&e.key.startsWith('Arrow')){e.preventDefault();if(e.key==='ArrowLeft')cam.yaw-=10;if(e.key==='ArrowRight')cam.yaw+=10;if(e.key==='ArrowUp')cam.pitch=Math.max(-80,cam.pitch-6);if(e.key==='ArrowDown')cam.pitch=Math.min(60,cam.pitch+6);applyCam(true);return}
     if(!S.sel)return;
     const d=getDev(S.sel);
     const map={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right'};
@@ -1399,7 +1500,9 @@ function pref(){try{localStorage.setItem('t1-rack-pref',JSON.stringify({labels:S
 function loadPref(){try{const p=JSON.parse(localStorage.getItem('t1-rack-pref')||'{}');if(p.labels===false){S.labels=false;$('#tLabels').setAttribute('aria-pressed','false')}}catch(_){}}
 
 /* ───────── 開機 ───────── */
-buildRooms();loadPref();fit();bind();
+buildRooms();loadPref();bind();
+let m0='3d';try{m0=localStorage.getItem('t1-rack-mode')||'3d'}catch(_){}
+setMode(m0);spinLoop();
 initStore();
 // 開機動畫：指示燈由上而下依序亮起
 requestAnimationFrame(()=>{document.querySelectorAll('.room .dev').forEach(el=>el.classList.add('boot'));setTimeout(()=>document.querySelectorAll('.room .dev.boot').forEach(el=>el.classList.remove('boot')),4000)});
